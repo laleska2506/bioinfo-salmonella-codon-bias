@@ -122,14 +122,28 @@ def validar_archivo_fasta(archivo) -> Tuple[bool, Optional[str]]:
     # Validar tamaño del archivo (mostrar información, pero ser más permisivo)
     tamaño_mb = archivo.size / (1024 * 1024)
     
-    # Detectar si estamos en Streamlit Cloud o Render
+    # Detectar si estamos en Streamlit Cloud, Render o local
     # Streamlit Cloud tiene más memoria (~1 GB) y puede manejar archivos más grandes
     # Render tiene menos memoria (512 MB) y necesita límites más conservadores
+    # Local no tiene límites restrictivos
     es_streamlit_cloud = os.environ.get("STREAMLIT_SHARING_MODE") == "true" or "streamlit.app" in os.environ.get("SERVER_NAME", "")
-    limite_mb = 100 if es_streamlit_cloud else 50  # 100 MB para Streamlit Cloud, 50 MB para Render
-    plataforma = "Streamlit Cloud" if es_streamlit_cloud else "Render"
+    es_render = os.environ.get("RENDER") == "true" or "render.com" in os.environ.get("SERVER_NAME", "")
+    es_local = not es_streamlit_cloud and not es_render
     
-    if tamaño_mb > limite_mb:
+    # Establecer límites según la plataforma
+    if es_streamlit_cloud:
+        limite_mb = 100  # Streamlit Cloud puede manejar archivos más grandes
+        plataforma = "Streamlit Cloud"
+    elif es_render:
+        limite_mb = 50  # Render tiene menos memoria
+        plataforma = "Render"
+    else:
+        # Local: usar límite por defecto de Streamlit (200 MB) o sin límite restrictivo
+        limite_mb = 200  # Límite por defecto de Streamlit
+        plataforma = "local"
+    
+    # Solo validar límite si no estamos en local (local puede tener más recursos)
+    if not es_local and tamaño_mb > limite_mb:
         return False, f"El archivo es demasiado grande ({tamaño_mb:.2f} MB). El límite máximo recomendado es {limite_mb} MB por archivo para evitar errores en {plataforma}. Archivos más grandes pueden causar problemas de memoria."
     
     # Validar formato básico (debe empezar con >)
@@ -163,16 +177,21 @@ def ejecutar_analisis(salmonella_file, gallus_file, params: Dict):
         st.write(f"- Archivo Gallus: {gallus_file.name} ({tamaño_gall:.2f} MB)")
         st.write(f"- Parámetros: min_len={params.get('min_len', 0)}, limpiar_ns={params.get('limpiar_ns', True)}, top_codons={params.get('top_codons', 20)}")
         
-        # Advertencia si los archivos son muy grandes
+        # Advertencia si los archivos son muy grandes (solo si no es local)
         es_streamlit_cloud = os.environ.get("STREAMLIT_SHARING_MODE") == "true" or "streamlit.app" in os.environ.get("SERVER_NAME", "")
-        plataforma = "Streamlit Cloud" if es_streamlit_cloud else "Render"
+        es_render = os.environ.get("RENDER") == "true" or "render.com" in os.environ.get("SERVER_NAME", "")
+        es_local = not es_streamlit_cloud and not es_render
         
-        if tamaño_sal > 30 or tamaño_gall > 30:
+        # Solo mostrar advertencias si no es local
+        if not es_local and (tamaño_sal > 50 or tamaño_gall > 50):
+            plataforma = "Streamlit Cloud" if es_streamlit_cloud else "Render"
             st.warning(f"⚠️ Los archivos son grandes. El análisis puede tardar varios minutos.")
-            if not es_streamlit_cloud:
+            if es_render:
                 st.info(f"💡 **Recomendación**: Para archivos grandes, considera usar Streamlit Cloud (más memoria) o actualizar el plan de Render.")
-            else:
+            elif es_streamlit_cloud:
                 st.info(f"💡 **Nota**: Estás usando {plataforma} que tiene más memoria disponible (~1 GB).")
+        elif es_local and (tamaño_sal > 100 or tamaño_gall > 100):
+            st.info(f"💡 **Nota**: Archivos grandes ({tamaño_sal:.2f} MB y {tamaño_gall:.2f} MB). El análisis puede tardar varios minutos.")
         
         # Leer archivos con barra de progreso
         with st.spinner("Leyendo archivos FASTA..."):
@@ -459,22 +478,30 @@ def main():
             es_valido, mensaje = validar_archivo_fasta(salmonella_file)
             if not es_valido:
                 st.error(f"❌ Error: {mensaje}")
-                # Mostrar información adicional si el archivo es muy grande
+                # Mostrar información adicional solo si no es local
                 es_streamlit_cloud = os.environ.get("STREAMLIT_SHARING_MODE") == "true" or "streamlit.app" in os.environ.get("SERVER_NAME", "")
-                limite_mb = 100 if es_streamlit_cloud else 50
-                plataforma = "Streamlit Cloud" if es_streamlit_cloud else "Render"
+                es_render = os.environ.get("RENDER") == "true" or "render.com" in os.environ.get("SERVER_NAME", "")
+                es_local = not es_streamlit_cloud and not es_render
                 
-                if tamaño_mb > limite_mb:
-                    st.warning(f"⚠️ Archivos grandes pueden causar errores en {plataforma}.")
-                    st.info(f"💡 **Solución**: Divide el archivo en partes más pequeñas (menos de {limite_mb} MB cada una) o actualiza el plan.")
-                    if not es_streamlit_cloud:
-                        st.info("📝 **Nota**: El plan gratuito de Render tiene 512 MB de RAM. Streamlit Cloud tiene ~1 GB de RAM.")
+                if not es_local:
+                    limite_mb = 100 if es_streamlit_cloud else 50
+                    plataforma = "Streamlit Cloud" if es_streamlit_cloud else "Render"
+                    
+                    if tamaño_mb > limite_mb:
+                        st.warning(f"⚠️ Archivos grandes pueden causar errores en {plataforma}.")
+                        st.info(f"💡 **Solución**: Divide el archivo en partes más pequeñas (menos de {limite_mb} MB cada una) o actualiza el plan.")
+                        if es_render:
+                            st.info("📝 **Nota**: El plan gratuito de Render tiene 512 MB de RAM. Streamlit Cloud tiene ~1 GB de RAM.")
             else:
+                # Solo mostrar advertencias si no es local
                 es_streamlit_cloud = os.environ.get("STREAMLIT_SHARING_MODE") == "true" or "streamlit.app" in os.environ.get("SERVER_NAME", "")
-                if tamaño_mb > 30:
+                es_render = os.environ.get("RENDER") == "true" or "render.com" in os.environ.get("SERVER_NAME", "")
+                es_local = not es_streamlit_cloud and not es_render
+                
+                if tamaño_mb > 50 and not es_local:
                     plataforma = "Streamlit Cloud" if es_streamlit_cloud else "Render"
                     st.warning(f"⚠️ Archivo grande ({tamaño_mb:.2f} MB). El análisis puede tardar varios minutos.")
-                    if not es_streamlit_cloud:
+                    if es_render:
                         st.info("💡 **Recomendación**: Para archivos grandes, considera usar Streamlit Cloud (más memoria) o actualizar el plan de Render.")
                 else:
                     st.success(f"✅ Archivo válido: {salmonella_file.name} ({tamaño_mb:.2f} MB)")
@@ -496,22 +523,30 @@ def main():
             es_valido, mensaje = validar_archivo_fasta(gallus_file)
             if not es_valido:
                 st.error(f"❌ Error: {mensaje}")
-                # Mostrar información adicional si el archivo es muy grande
+                # Mostrar información adicional solo si no es local
                 es_streamlit_cloud = os.environ.get("STREAMLIT_SHARING_MODE") == "true" or "streamlit.app" in os.environ.get("SERVER_NAME", "")
-                limite_mb = 100 if es_streamlit_cloud else 50
-                plataforma = "Streamlit Cloud" if es_streamlit_cloud else "Render"
+                es_render = os.environ.get("RENDER") == "true" or "render.com" in os.environ.get("SERVER_NAME", "")
+                es_local = not es_streamlit_cloud and not es_render
                 
-                if tamaño_mb > limite_mb:
-                    st.warning(f"⚠️ Archivos grandes pueden causar errores en {plataforma}.")
-                    st.info(f"💡 **Solución**: Divide el archivo en partes más pequeñas (menos de {limite_mb} MB cada una) o actualiza el plan.")
-                    if not es_streamlit_cloud:
-                        st.info("📝 **Nota**: El plan gratuito de Render tiene 512 MB de RAM. Streamlit Cloud tiene ~1 GB de RAM.")
+                if not es_local:
+                    limite_mb = 100 if es_streamlit_cloud else 50
+                    plataforma = "Streamlit Cloud" if es_streamlit_cloud else "Render"
+                    
+                    if tamaño_mb > limite_mb:
+                        st.warning(f"⚠️ Archivos grandes pueden causar errores en {plataforma}.")
+                        st.info(f"💡 **Solución**: Divide el archivo en partes más pequeñas (menos de {limite_mb} MB cada una) o actualiza el plan.")
+                        if es_render:
+                            st.info("📝 **Nota**: El plan gratuito de Render tiene 512 MB de RAM. Streamlit Cloud tiene ~1 GB de RAM.")
             else:
+                # Solo mostrar advertencias si no es local
                 es_streamlit_cloud = os.environ.get("STREAMLIT_SHARING_MODE") == "true" or "streamlit.app" in os.environ.get("SERVER_NAME", "")
-                if tamaño_mb > 30:
+                es_render = os.environ.get("RENDER") == "true" or "render.com" in os.environ.get("SERVER_NAME", "")
+                es_local = not es_streamlit_cloud and not es_render
+                
+                if tamaño_mb > 50 and not es_local:
                     plataforma = "Streamlit Cloud" if es_streamlit_cloud else "Render"
                     st.warning(f"⚠️ Archivo grande ({tamaño_mb:.2f} MB). El análisis puede tardar varios minutos.")
-                    if not es_streamlit_cloud:
+                    if es_render:
                         st.info("💡 **Recomendación**: Para archivos grandes, considera usar Streamlit Cloud (más memoria) o actualizar el plan de Render.")
                 else:
                     st.success(f"✅ Archivo válido: {gallus_file.name} ({tamaño_mb:.2f} MB)")
