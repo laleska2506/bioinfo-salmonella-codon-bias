@@ -119,11 +119,22 @@ def validar_archivo_fasta(archivo) -> Tuple[bool, Optional[str]]:
         if archivo.size > max_size:
             return False, f"El archivo es demasiado grande. Máximo: {max_upload_mb} MB"
     
+    # Validar tamaño del archivo (mostrar información, pero ser más permisivo)
+    tamaño_mb = archivo.size / (1024 * 1024)
+    
+    # Advertencia si el archivo es muy grande, pero permitirlo hasta 400MB
+    if tamaño_mb > 400:  # Límite práctico aumentado
+        return False, f"El archivo es demasiado grande ({tamaño_mb:.2f} MB). El límite máximo es 400 MB. Archivos más grandes pueden causar problemas de memoria."
+    
     # Validar formato básico (debe empezar con >)
-    contenido = archivo.read()
-    archivo.seek(0)  # Resetear puntero
-    if not contenido.startswith(b'>'):
-        return False, "El archivo no parece ser un FASTA válido (debe empezar con '>')"
+    # Solo leer los primeros bytes para validar (más eficiente para archivos grandes)
+    try:
+        primeros_bytes = archivo.read(100)
+        archivo.seek(0)  # Resetear puntero
+        if not primeros_bytes.startswith(b'>'):
+            return False, "El archivo no parece ser un FASTA válido (debe empezar con '>')"
+    except Exception as e:
+        return False, f"Error al leer el archivo: {str(e)}. El archivo puede estar corrupto o ser demasiado grande."
     
     return True, None
 
@@ -131,15 +142,29 @@ def validar_archivo_fasta(archivo) -> Tuple[bool, Optional[str]]:
 def ejecutar_analisis(salmonella_file, gallus_file, params: Dict):
     """Ejecuta el análisis genético."""
     try:
-        # Debug: mostrar parámetros recibidos
-        st.write(f"🔍 **Parámetros del análisis:**")
-        st.write(f"- Longitud mínima: {params.get('min_len', 0)}")
-        st.write(f"- Limpiar Ns: {params.get('limpiar_ns', True)}")
-        st.write(f"- Top codones: {params.get('top_codons', 20)}")
+        # Verificar que los archivos existan
+        if salmonella_file is None:
+            raise ValueError("El archivo de Salmonella no está disponible")
+        if gallus_file is None:
+            raise ValueError("El archivo de Gallus no está disponible")
         
-        # Leer archivos
-        salmonella_content = salmonella_file.read()
-        gallus_content = gallus_file.read()
+        # Mostrar información de los archivos
+        tamaño_sal = salmonella_file.size / (1024 * 1024)
+        tamaño_gall = gallus_file.size / (1024 * 1024)
+        
+        st.write(f"🔍 **Información del análisis:**")
+        st.write(f"- Archivo Salmonella: {salmonella_file.name} ({tamaño_sal:.2f} MB)")
+        st.write(f"- Archivo Gallus: {gallus_file.name} ({tamaño_gall:.2f} MB)")
+        st.write(f"- Parámetros: min_len={params.get('min_len', 0)}, limpiar_ns={params.get('limpiar_ns', True)}, top_codons={params.get('top_codons', 20)}")
+        
+        # Advertencia si los archivos son muy grandes
+        if tamaño_sal > 100 or tamaño_gall > 100:
+            st.warning(f"⚠️ Los archivos son grandes. El análisis puede tardar varios minutos. Por favor, ten paciencia.")
+        
+        # Leer archivos con barra de progreso
+        with st.spinner("Leyendo archivos FASTA..."):
+            salmonella_content = salmonella_file.read()
+            gallus_content = gallus_file.read()
         
         # Resetear punteros
         salmonella_file.seek(0)
@@ -387,11 +412,20 @@ def main():
             help="Archivo FASTA con secuencias de Salmonella"
         )
         if salmonella_file:
+            # Mostrar información del archivo antes de validar
+            tamaño_mb = salmonella_file.size / (1024 * 1024)
+            st.info(f"📄 Archivo detectado: {salmonella_file.name} ({tamaño_mb:.2f} MB)")
+            
             es_valido, mensaje = validar_archivo_fasta(salmonella_file)
             if not es_valido:
-                st.error(mensaje)
+                st.error(f"❌ Error: {mensaje}")
+                # Mostrar información adicional si el archivo es muy grande
+                if tamaño_mb > 100:
+                    st.warning("⚠️ Archivos grandes pueden tardar más en procesarse. El límite máximo es 400 MB.")
             else:
-                st.success(f"✅ Archivo válido: {salmonella_file.name} ({salmonella_file.size / 1024:.2f} KB)")
+                if tamaño_mb > 50:
+                    st.warning(f"⚠️ Archivo grande ({tamaño_mb:.2f} MB). El análisis puede tardar varios minutos.")
+                st.success(f"✅ Archivo válido: {salmonella_file.name} ({tamaño_mb:.2f} MB)")
     
     with col2:
         st.subheader("Gallus")
@@ -399,14 +433,25 @@ def main():
             "Selecciona el archivo FASTA de Gallus",
             type=['fa', 'fasta'],
             key="gallus_uploader",
-            help="Archivo FASTA con secuencias de Gallus"
+            help="Archivo FASTA con secuencias de Gallus",
+            accept_multiple_files=False
         )
         if gallus_file:
+            # Mostrar información del archivo antes de validar
+            tamaño_mb = gallus_file.size / (1024 * 1024)
+            st.info(f"📄 Archivo detectado: {gallus_file.name} ({tamaño_mb:.2f} MB)")
+            
             es_valido, mensaje = validar_archivo_fasta(gallus_file)
             if not es_valido:
-                st.error(mensaje)
+                st.error(f"❌ Error: {mensaje}")
+                # Mostrar información adicional si el archivo es muy grande
+                if tamaño_mb > 100:
+                    st.warning("⚠️ Archivos grandes pueden tardar más en procesarse. El límite máximo es 400 MB.")
+                    st.info("💡 Tip: Si el archivo es demasiado grande, considera dividirlo en archivos más pequeños o usar un servidor con más recursos.")
             else:
-                st.success(f"✅ Archivo válido: {gallus_file.name} ({gallus_file.size / 1024:.2f} KB)")
+                if tamaño_mb > 50:
+                    st.warning(f"⚠️ Archivo grande ({tamaño_mb:.2f} MB). El análisis puede tardar varios minutos.")
+                st.success(f"✅ Archivo válido: {gallus_file.name} ({tamaño_mb:.2f} MB)")
     
     # Sección 2: Parámetros
     st.markdown('<div class="section-header">2️⃣ Parámetros de Análisis</div>', 
