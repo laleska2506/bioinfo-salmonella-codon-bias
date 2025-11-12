@@ -140,13 +140,28 @@ class AnalysisClient:
         salmonella_path = Path(self.temp_dir) / "salmonella.fasta"
         gallus_path = Path(self.temp_dir) / "gallus.fasta"
         
-        salmonella_path.write_bytes(salmonella_fasta)
-        gallus_path.write_bytes(gallus_fasta)
+        # Escribir archivos con manejo de errores de memoria
+        try:
+            salmonella_path.write_bytes(salmonella_fasta)
+            gallus_path.write_bytes(gallus_fasta)
+        except MemoryError:
+            raise MemoryError("No hay suficiente memoria para guardar los archivos. Los archivos son demasiado grandes.")
         
         try:
             # 1. Cargar secuencias usando paths absolutos
+            # Mostrar progreso para archivos grandes
+            import sys
+            sys.stdout.write("[DEBUG] Cargando secuencias de Salmonella...\n")
+            sys.stdout.flush()
             salmonella = cargar_secuencias(str(salmonella_path.absolute()))
+            sys.stdout.write(f"[DEBUG] Cargadas {len(salmonella)} secuencias de Salmonella\n")
+            sys.stdout.flush()
+            
+            sys.stdout.write("[DEBUG] Cargando secuencias de Gallus...\n")
+            sys.stdout.flush()
             gallus = cargar_secuencias(str(gallus_path.absolute()))
+            sys.stdout.write(f"[DEBUG] Cargadas {len(gallus)} secuencias de Gallus\n")
+            sys.stdout.flush()
             
             # 2. Validar secuencias
             if not validar_secuencias(salmonella):
