@@ -1,105 +1,132 @@
-# Análisis de Secuencias Genéticas: Salmonella y Gallus
+# 🧬 SalmoAvianLight - Salmonella vs Gallus
 
-Proyecto de bioinformática para el análisis comparativo de secuencias genéticas entre *Salmonella* (bacteria) y *Gallus* (pollo). El proyecto incluye cálculo de métricas básicas, análisis de uso de codones y generación de visualizaciones estadísticas.
+Herramienta de bioinformática para analizar y comparar secuencias genéticas entre *Salmonella* (bacteria) y *Gallus* (pollo). Incluye cálculo de métricas, análisis de uso de codones, visualización de datos y una **interfaz web interactiva** para analistas de laboratorio.
 
-## 📋 Descripción
+## 📋 ¿Qué hace este proyecto?
 
-Este proyecto realiza un análisis bioinformático completo de secuencias genéticas, incluyendo:
+Este proyecto permite:
 
-- **Carga y procesamiento** de secuencias desde archivos FASTA
-- **Cálculo de métricas básicas** (longitud, contenido GC, etc.)
-- **Análisis de uso de codones** para identificar patrones de codificación
-- **Visualización de datos** mediante gráficos estadísticos y comparativos
-- **Comparación entre especies** (Salmonella vs Gallus)
+- **Analizar secuencias genéticas** desde archivos FASTA
+- **Calcular métricas básicas** (longitud, contenido GC, etc.)
+- **Analizar el uso de codones** para identificar patrones de codificación
+- **Comparar secuencias** entre dos especies (Salmonella vs Gallus)
+- **Visualizar resultados** mediante gráficos estadísticos y tablas
+- **Interfaz web interactiva** para usar sin programar
 
-## ✨ Características
+## 🚀 Cómo empezar
 
-### Procesamiento de Secuencias
-- Carga de secuencias desde archivos FASTA
-- Validación de secuencias
-- Cálculo de métricas básicas (longitud, contenido GC)
+### Paso 1: Instalar dependencias
 
-### Análisis de Codones
-- Cálculo de frecuencia de uso de codones
-- Análisis de bias de codones
-- Comparación de uso de codones entre especies
-- Generación de tablas de codones y aminoácidos
-
-### Visualización
-- Distribución de longitudes de secuencias
-- Distribución de contenido GC
-- Relación entre longitud y contenido GC
-- Análisis de uso de codones (top 20)
-- Correlación de codones entre especies
-- Heatmap de uso de codones
-- Distribución acumulativa de longitudes
-
-## 🔧 Requisitos
-
-- Python 3.8 o superior
-- Las siguientes librerías (ver `requeriments.txt`):
-  - biopython >= 1.83
-  - pandas >= 2.0
-  - matplotlib >= 3.8
-  - seaborn >= 0.13
-  - numpy >= 1.26
-  - scipy >= 1.11
-
-## 📦 Instalación
-
-1. **Clonar el repositorio** (o descargar el proyecto):
 ```bash
-git clone <url-del-repositorio>
-cd bioinfo_salmonella
-```
-
-2. **Crear un entorno virtual** (recomendado):
-```bash
+# Crear entorno virtual (recomendado)
 python -m venv venv
+
+# Activar entorno virtual
+# Windows:
+venv\Scripts\activate
+# Linux/Mac:
+source venv/bin/activate
+
+# Instalar dependencias
+pip install -r requirements.txt
 ```
 
-3. **Activar el entorno virtual**:
-   - En Windows:
-   ```bash
-   venv\Scripts\activate
-   ```
-   - En Linux/Mac:
-   ```bash
-   source venv/bin/activate
-   ```
+### Paso 2: Usar la aplicación web (Recomendado)
 
-4. **Instalar las dependencias**:
 ```bash
-pip install -r requeriments.txt
+streamlit run app.py
 ```
 
-## 🚀 Uso
+La aplicación se abrirá automáticamente en `http://localhost:8501`.
 
-### Ejecución del análisis completo
+**En la interfaz web:**
+1. Sube dos archivos FASTA (Salmonella y Gallus)
+2. Configura los parámetros de análisis
+3. Haz clic en "🚀 Analizar"
+4. Revisa y descarga los resultados (tablas CSV, gráficos PNG, ZIP completo)
 
-Para ejecutar el análisis completo de secuencias:
+### Paso 3: Usar desde línea de comandos (Opcional)
 
 ```bash
+# Coloca tus archivos FASTA en data/
+# salmonella_genes.fasta
+# gallus_genes.fasta
+
+# Ejecutar análisis
 python main.py
 ```
 
-Este script realizará:
-1. Carga de secuencias desde `data/salmonella_genes.fasta` y `data/gallus_genes.fasta`
-2. Cálculo de métricas básicas
-3. Análisis de uso de codones
-4. Generación de gráficos básicos y avanzados
-5. Guardado de resultados en formato CSV
+Los resultados se guardarán en la carpeta `results/`.
 
-### Uso como módulo
+## 📦 Requisitos
 
-También puedes importar las funciones del módulo `src` para usar en tus propios scripts:
+- Python 3.8 o superior
+- Dependencias: streamlit, pandas, biopython, matplotlib, numpy, scipy, seaborn, requests
+  (ver `requirements.txt` para versiones específicas)
+
+## 🎯 Características principales
+
+### 🔬 Análisis
+
+- Carga y validación de secuencias FASTA
+- Cálculo de métricas básicas (longitud, contenido GC)
+- Análisis de frecuencia de uso de codones
+- Comparación entre especies
+- Filtrado por longitud mínima
+- Normalización de caracteres N
+
+### 📊 Visualización
+
+- Distribución de longitudes de secuencias
+- Distribución de contenido GC
+- Relación longitud-GC
+- Gráficos de uso de codones (top N configurable)
+- Correlación de codones entre especies
+- Heatmap de uso de codones
+- Gráficos específicos por especie
+
+### 🌐 Interfaz Web
+
+- **Interfaz intuitiva** para analistas de laboratorio
+- **Modo local**: Ejecuta análisis directamente en tu servidor
+- **Modo API**: Se conecta a un backend remoto (opcional)
+- **Descarga de resultados**: CSV individuales o ZIP completo
+- **Manejo de errores**: Mensajes claros y opción de reintento
+
+## 📁 Estructura del proyecto
+
+```
+bioinfo_salmonella/
+├── app.py              # Aplicación web Streamlit
+├── main.py             # Script de línea de comandos
+├── src/                # Módulos de análisis
+│   ├── procesamiento.py
+│   ├── analisis.py
+│   └── visualizacion.py
+├── services/           # Servicios del frontend
+├── utils/              # Utilidades
+├── data/               # Archivos FASTA de entrada
+├── results/            # Resultados del análisis
+└── requirements.txt    # Dependencias
+```
+
+## 📊 Resultados
+
+El análisis genera:
+
+- **CSV**: `resumen_metricas.csv`, `codon_usage.csv`
+- **Gráficos PNG**: 9 gráficos estadísticos en `results/graficos/`
+- **ZIP completo**: Descarga todos los resultados (solo en interfaz web)
+
+## 🔧 Uso avanzado
+
+### Usar como módulo Python
 
 ```python
 from src import (
     cargar_secuencias,
     calcular_metricas_basicas,
-    calcular_uso_codones,
-    generar_todos_los_graficos
+    calcular_uso_codones
 )
 
 # Cargar secuencias
@@ -108,116 +135,39 @@ salmonella = cargar_secuencias("data/salmonella_genes.fasta")
 # Calcular métricas
 metricas = calcular_metricas_basicas(salmonella)
 
-# Analizar uso de codones
+# Analizar codones
 codones = calcular_uso_codones(salmonella, "salmonella")
 ```
 
-## 📁 Estructura del Proyecto
+### Modo API (con backend)
 
-```
-bioinfo_salmonella/
-│
-├── data/                          # Archivos de datos FASTA
-│   ├── salmonella_genes.fasta     # Secuencias de Salmonella
-│   └── gallus_genes.fasta         # Secuencias de Gallus
-│
-├── src/                           # Módulos del proyecto
-│   ├── __init__.py               # Inicialización del paquete
-│   ├── procesamiento.py          # Funciones de carga y procesamiento
-│   ├── analisis.py               # Funciones de análisis de codones
-│   └── visualizacion.py          # Funciones de visualización
-│
-├── results/                       # Resultados del análisis
-│   ├── graficos/                 # Gráficos generados
-│   │   ├── distribucion_longitudes.png
-│   │   ├── distribucion_gc.png
-│   │   ├── relacion_longitud_gc.png
-│   │   ├── uso_codones_top20.png
-│   │   ├── correlacion_codones.png
-│   │   ├── heatmap_codones.png
-│   │   ├── distribucion_acumulativa_longitudes.png
-│   │   ├── salmonella_gc.png
-│   │   └── gallus_gc.png
-│   ├── resumen_metricas.csv      # Métricas básicas
-│   └── codon_usage.csv           # Uso de codones
-│
-├── main.py                        # Script principal
-├── requeriments.txt               # Dependencias del proyecto
-├── README.md                      # Este archivo
-└── .gitignore                     # Archivos ignorados por Git
+```bash
+# Configurar variable de entorno
+export BACKEND_BASE_URL="https://tu-backend.com"
+
+# Ejecutar Streamlit
+streamlit run app.py
 ```
 
-## 📊 Resultados
-
-El análisis genera los siguientes archivos de resultados:
-
-### Archivos CSV
-- **`results/resumen_metricas.csv`**: Contiene las métricas básicas calculadas para todas las secuencias (longitud, contenido GC, especie, etc.)
-- **`results/codon_usage.csv`**: Contiene la frecuencia de uso de cada codón para ambas especies
-
-### Gráficos Generados
-1. **distribucion_longitudes.png**: Distribución de longitudes de secuencias por especie
-2. **distribucion_gc.png**: Distribución del contenido GC por especie
-3. **relacion_longitud_gc.png**: Relación entre longitud y contenido GC
-4. **uso_codones_top20.png**: Top 20 codones más utilizados
-5. **correlacion_codones.png**: Correlación de uso de codones entre especies
-6. **heatmap_codones.png**: Heatmap del uso de codones
-7. **distribucion_acumulativa_longitudes.png**: Distribución acumulativa de longitudes
-8. **salmonella_gc.png**: Gráfico específico de contenido GC para Salmonella
-9. **gallus_gc.png**: Gráfico específico de contenido GC para Gallus
-
-## 🔬 Funcionalidades del Módulo
-
-### Módulo `procesamiento`
-- `cargar_secuencias(ruta_archivo)`: Carga secuencias desde un archivo FASTA
-- `calcular_metricas_basicas(secuencias)`: Calcula métricas básicas de las secuencias
-- `validar_secuencias(secuencias)`: Valida las secuencias cargadas
-
-### Módulo `analisis`
-- `calcular_uso_codones(secuencias, etiqueta)`: Calcula la frecuencia de uso de codones
-- `analizar_bias_codones(df_codones, especie)`: Analiza el bias en el uso de codones
-- `comparar_uso_codones_especies(df_codones)`: Compara el uso de codones entre especies
-- `generar_tabla_codones_aminoacidos()`: Genera una tabla de codones y aminoácidos
-
-### Módulo `visualizacion`
-- `grafico_gc(df_metricas, especie)`: Genera gráfico de contenido GC
-- `distribucion_longitudes(df_metricas)`: Genera gráfico de distribución de longitudes
-- `distribucion_gc(df_metricas)`: Genera gráfico de distribución de GC
-- `relacion_longitud_gc(df_metricas)`: Genera gráfico de relación longitud-GC
-- `uso_codones_top20(df_codones)`: Genera gráfico de top 20 codones
-- `correlacion_codones(df_codones)`: Genera gráfico de correlación de codones
-- `heatmap_codones(df_codones)`: Genera heatmap de uso de codones
-- `distribucion_acumulativa_longitudes(df_metricas)`: Genera gráfico acumulativo
-- `generar_todos_los_graficos()`: Genera todos los gráficos avanzados
-
-## ⚠️ Notas Importantes
-
-- Asegúrate de que los archivos FASTA estén en la carpeta `data/` antes de ejecutar el análisis
-- Los archivos de resultados se guardan automáticamente en la carpeta `results/`
-- La carpeta `results/graficos/` se crea automáticamente si no existe
-- Los archivos CSV y PNG en `results/` están ignorados por Git (ver `.gitignore`)
-
-## 🐛 Solución de Problemas
+## 🐛 Solución de problemas
 
 ### Error: "No se pudo encontrar el archivo"
-- Verifica que los archivos `salmonella_genes.fasta` y `gallus_genes.fasta` estén en la carpeta `data/`
-- Verifica que las rutas de los archivos sean correctas
+- Verifica que los archivos FASTA estén en `data/` (modo CLI)
+- Verifica que los archivos se hayan subido correctamente (modo web)
 
 ### Error de importación
-- Asegúrate de haber instalado todas las dependencias: `pip install -r requeriments.txt`
-- Verifica que estés usando el entorno virtual correcto
+- Instala dependencias: `pip install -r requirements.txt`
+- Verifica que el entorno virtual esté activado
 
-### Error al generar gráficos
-- Verifica que la carpeta `results/` exista y tenga permisos de escritura
-- Asegúrate de que los archivos CSV necesarios estén presentes en `results/`
+### Error: "Las secuencias contienen caracteres inválidos"
+- Los archivos FASTA solo deben contener: A, T, C, G, N
+- Usa la opción "Normalizar/limpiar Ns" en la interfaz web
 
-## 📝 Versión
+## 📝 Notas
 
-Versión actual: **1.0.0**
-
-## 👤 Autor
-
-Analista de Secuencias
+- Los archivos de resultados en `results/` están ignorados por Git
+- En modo web local, los archivos temporales se limpian automáticamente
+- Los gráficos se generan en `results/graficos/`
 
 ## 📄 Licencia
 
@@ -225,5 +175,6 @@ Este proyecto es de uso educativo y de investigación.
 
 ---
 
-**¡Disfruta analizando secuencias genéticas!** 🧬
+**¿Listo para analizar secuencias genéticas?** 🧬
 
+Para más información, consulta el código fuente o los comentarios en los archivos del proyecto.

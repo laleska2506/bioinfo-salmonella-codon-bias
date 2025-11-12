@@ -20,7 +20,20 @@ Thumbs.db
 # Resultados pesados
 results/graficos/*.png
 results/*.csv
+results/*.zip
+!results/.gitkeep
 
 # data pesada
 data/*.fasta
 !data/.gitkeep
+
+# Archivos temporales de análisis
+*.tmp
+temp/
+tmp/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Logs
+*.log

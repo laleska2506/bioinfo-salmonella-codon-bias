@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from collections import Counter
 
 def calcular_uso_codones(secuencias, etiqueta):

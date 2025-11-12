@@ -96,7 +96,7 @@ def validar_secuencias(secuencias):
     bool
         True si todas las secuencias son válidas, False en caso contrario
     """
-    nucleotidos_validos = {'A', 'T', 'C', 'G', 'N'}
+    nucleotidos_validos = {'A', 'T', 'C', 'G'}
     
     for id_sec, sec in secuencias:
         sec_set = set(sec.upper())
