@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.dist/
+.build/
+
+# Entornos
+venv/
+.env
+.venv/
+
+# Jupyter
+.ipynb_checkpoints/
+.DS_Store
+Thumbs.db
+
+# Resultados pesados
+results/graficos/*.png
+results/*.csv
+
+# data pesada
+data/*.fasta
+!data/.gitkeep
