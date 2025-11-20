@@ -31,6 +31,19 @@ st.set_page_config(
 # Estilos CSS profesionales
 st.markdown("""
     <style>
+
+     .logo-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        margin: 0 auto;
+        padding: 0;
+    }
+    .logo-wrapper img {
+        display: block;
+        margin: 0 auto;
+    }
     .main-header {
         font-size: 2.5rem;
         font-weight: bold;
