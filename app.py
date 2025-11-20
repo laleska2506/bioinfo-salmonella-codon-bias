@@ -1,6 +1,6 @@
 """
 Frontend Web para SalmoAvianLight - Versión Optimizada
-Selección personalizada de gráficos con descripciones técnicas
+Selección personalizada de gráficos con descripciones técnicas y logo
 """
 import streamlit as st
 import pandas as pd
@@ -12,6 +12,7 @@ from typing import Optional, Dict, Tuple, List
 import sys
 import io
 import concurrent.futures
+import base64
 
 # Agregar el directorio raíz al path
 project_root = Path(__file__).parent
@@ -31,8 +32,8 @@ st.set_page_config(
 # Estilos CSS profesionales
 st.markdown("""
     <style>
-
-     .logo-wrapper {
+    /* Estilo para centrar el logo */
+    .logo-wrapper {
         display: flex;
         justify-content: center;
         align-items: center;
@@ -99,6 +100,10 @@ st.markdown("""
         padding: 8px;
         background-color: #e8f4fd;
         border-radius: 5px;
+    }
+    /* Asegurar que el logo esté centrado incluso con el padding de Streamlit */
+    div[data-testid="stMarkdownContainer"]:has(.logo-wrapper) {
+        text-align: center;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -486,25 +491,56 @@ def mostrar_resultados_completos(resultados: Dict):
         st.error(f"Error al preparar descarga: {e}")
 
 def main():
-    """Aplicación principal con selección de gráficos."""
+    """Aplicación principal con selección de gráficos y logo."""
     
-    # Header
+    # Logo centrado en la parte superior
+    logo_path = Path(__file__).parent / "assets" / "logo.png"
+    
+    # Contenedor centrado para el logo
+    if logo_path.exists():
+        try:
+            with open(logo_path, "rb") as img_file:
+                img_data = base64.b64encode(img_file.read()).decode()
+            
+            # Mostrar logo centrado con HTML/CSS
+            st.markdown(
+                f"""
+                <div style="text-align: center; width: 100%; margin: 1rem 0;">
+                    <img src="data:image/png;base64,{img_data}" style="max-width: 150px; height: auto; margin: 0 auto; display: inline-block;">
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+        except Exception as e:
+            # Si hay error cargando la imagen, usar st.image como fallback
+            col1, col2, col3 = st.columns([1, 1, 1])
+            with col2:
+                st.image(str(logo_path), width=150)
+    else:
+        # Si no hay logo, mostrar emoji como fallback
+        st.markdown(
+            "<div style='text-align: center; font-size: 3rem; margin-bottom: 1rem;'>🧬</div>", 
+            unsafe_allow_html=True
+        )
+    
+    # Título y subtítulo centrados debajo del logo
     st.markdown('<div class="main-header">SalmoAvianLight</div>', unsafe_allow_html=True)
-    st.markdown('<div class="subheader">Análisis Comparativo de Secuencias Genéticas</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subheader">Comparación de Secuencias: Salmonella vs Gallus</div>', 
+                unsafe_allow_html=True)
     
     st.markdown("""
-    <div style="text-align: center; color: #666; margin-bottom: 2rem;">
-    Herramienta profesional para análisis comparativo de secuencias de Salmonella y Gallus.<br>
-    Selecciona los gráficos requeridos y obtén resultados detallados con explicaciones técnicas.
+    <div style="text-align: center; color: #888; margin-bottom: 2rem;">
+    Esta herramienta te permite analizar y comparar secuencias genéticas de dos especies.<br>
+    Sube tus archivos FASTA, define los parámetros y obtén resultados detallados en minutos.
     </div>
     """, unsafe_allow_html=True)
     
     # Indicador de modo
     modo = st.session_state.analysis_client.mode
     if modo == "API":
-        st.info(f"Modo API: Conectado a backend externo")
+        st.info(f"Modo API: Conectado a {st.session_state.analysis_client.base_url}")
     else:
-        st.info("Modo Local: Procesamiento en este servidor")
+        st.info("Modo Local: Ejecutando análisis en este servidor")
     
     # Sección 1: Carga de archivos
     st.markdown('<div class="section-header">Carga de Archivos FASTA</div>', unsafe_allow_html=True)
@@ -512,7 +548,7 @@ def main():
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("Archivo de Salmonella")
+        st.subheader("Salmonella")
         salmonella_file = st.file_uploader(
             "Selecciona el archivo FASTA de Salmonella",
             type=['fa', 'fasta'],
@@ -520,15 +556,15 @@ def main():
             help="Archivo FASTA con secuencias de Salmonella"
         )
         if salmonella_file:
+            tamaño_mb = salmonella_file.size / (1024 * 1024)
             es_valido, mensaje = validar_archivo_fasta(salmonella_file)
-            if es_valido:
-                tamaño_mb = salmonella_file.size / (1024 * 1024)
-                st.success(f"Archivo válido: {salmonella_file.name} ({tamaño_mb:.1f} MB)")
-            else:
+            if not es_valido:
                 st.error(f"Error: {mensaje}")
+            else:
+                st.success(f"Archivo válido: {salmonella_file.name} ({tamaño_mb:.1f} MB)")
     
     with col2:
-        st.subheader("Archivo de Gallus")
+        st.subheader("Gallus")
         gallus_file = st.file_uploader(
             "Selecciona el archivo FASTA de Gallus",
             type=['fa', 'fasta'],
@@ -536,12 +572,12 @@ def main():
             help="Archivo FASTA con secuencias de Gallus"
         )
         if gallus_file:
+            tamaño_mb = gallus_file.size / (1024 * 1024)
             es_valido, mensaje = validar_archivo_fasta(gallus_file)
-            if es_valido:
-                tamaño_mb = gallus_file.size / (1024 * 1024)
-                st.success(f"Archivo válido: {gallus_file.name} ({tamaño_mb:.1f} MB)")
-            else:
+            if not es_valido:
                 st.error(f"Error: {mensaje}")
+            else:
+                st.success(f"Archivo válido: {gallus_file.name} ({tamaño_mb:.1f} MB)")
     
     # Sección 2: Selección de gráficos
     mostrar_seleccion_graficos()
@@ -582,6 +618,14 @@ def main():
         'min_len': min_len,
         'top_codons': top_codons
     }
+    
+    # Verificar cambios en parámetros
+    params_changed = False
+    if st.session_state.last_used_params is not None:
+        params_changed = st.session_state.last_used_params != params
+    
+    if params_changed and st.session_state.analysis_status == 'COMPLETED':
+        st.warning("Parámetros modificados: Ejecuta un nuevo análisis para ver resultados actualizados.")
     
     # Sección 4: Ejecución
     st.markdown('<div class="section-header">Ejecución del Análisis</div>', unsafe_allow_html=True)
@@ -690,8 +734,8 @@ def main():
     st.markdown("---")
     st.markdown("""
     <div style="text-align: center; color: #888; font-size: 0.9rem;">
-    SalmoAvianLight - Herramienta de Análisis Genético Comparativo<br>
-    Para uso de analistas de laboratorio
+    Herramienta de Análisis Genético - Salmonella vs Gallus<br>
+    Para analistas de laboratorio
     </div>
     """, unsafe_allow_html=True)
 
