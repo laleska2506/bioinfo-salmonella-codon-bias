@@ -1,6 +1,6 @@
 """
 Frontend Web para SalmoAvianLight - Salmonella vs Gallus
-Aplicación Streamlit mejorada con selección de gráficos y descripciones
+Aplicación Streamlit para analistas de laboratorio
 """
 import streamlit as st
 import pandas as pd
@@ -12,14 +12,12 @@ from typing import Optional, Dict, Tuple, List
 import sys
 import io
 
-# Agregar el directorio raíz al path
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
 from services.analysis_client import AnalysisClient
 from utils.zipper import crear_zip_resultados
 
-# Configuración de la página
 st.set_page_config(
     page_title="SalmoAvianLight",
     page_icon="🧬",
@@ -27,22 +25,8 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS personalizados mejorados
 st.markdown("""
     <style>
-    /* Estilo para centrar el logo */
-    .logo-wrapper {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 100%;
-        margin: 0 auto;
-        padding: 0;
-    }
-    .logo-wrapper img {
-        display: block;
-        margin: 0 auto;
-    }
     .main-header {
         font-size: 2.5rem;
         font-weight: bold;
@@ -66,51 +50,101 @@ st.markdown("""
         padding-bottom: 0.5rem;
         border-bottom: 2px solid #1f77b4;
     }
-    /* Contenedor de gráficos con bordes */
-    .chart-container {
+    .graph-container {
         border: 2px solid #e0e0e0;
-        border-radius: 10px;
-        padding: 15px;
-        margin: 15px 0;
-        background-color: #fafafa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        background-color: #ffffff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-    .chart-title {
-        font-size: 1.3rem;
-        font-weight: bold;
-        color: #2c3e50;
-        margin-bottom: 15px;
-        text-align: center;
-    }
-    .chart-description {
-        font-size: 0.95rem;
-        line-height: 1.5;
-        color: #555;
-        text-align: justify;
-        padding: 10px;
-        background-color: #f8f9fa;
-        border-left: 3px solid #3498db;
-        border-radius: 5px;
-    }
-    /* Estilos para la selección de gráficos */
-    .likert-option {
-        padding: 8px 12px;
-        margin: 5px 0;
-        border-radius: 5px;
-        background-color: #f0f2f6;
+    .graph-image-container {
         border: 1px solid #ddd;
-    }
-    .likert-option.selected {
-        background-color: #e3f2fd;
-        border-color: #2196f3;
-    }
-    /* Asegurar que el logo esté centrado incluso con el padding de Streamlit */
-    div[data-testid="stMarkdownContainer"]:has(.logo-wrapper) {
+        border-radius: 6px;
+        padding: 8px;
+        background-color: #f8f9fa;
         text-align: center;
+    }
+    .graph-description {
+        background-color: #f8f9fa;
+        padding: 1.2rem;
+        border-radius: 6px;
+        border-left: 4px solid #1f77b4;
+        font-size: 0.92rem;
+        line-height: 1.5;
+        height: 100%;
+    }
+    .likert-scale {
+        background-color: #f0f2f6;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin: 1rem 0;
+    }
+    .file-info {
+        background-color: #e8f4fd;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        margin: 0.5rem 0;
+        border-left: 3px solid #1f77b4;
+    }
+    .success-message {
+        background-color: #d4edda;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        margin: 0.5rem 0;
+        border-left: 3px solid #28a745;
+    }
+    .error-message {
+        background-color: #f8d7da;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        margin: 0.5rem 0;
+        border-left: 3px solid #dc3545;
+    }
+    .warning-message {
+        background-color: #fff3cd;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        margin: 0.5rem 0;
+        border-left: 3px solid #ffc107;
+    }
+    .status-running {
+        background-color: #cce5ff;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin: 1rem 0;
+        border-left: 4px solid #007bff;
+    }
+    .status-completed {
+        background-color: #d4edda;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin: 1rem 0;
+        border-left: 4px solid #28a745;
+    }
+    .status-failed {
+        background-color: #f8d7da;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin: 1rem 0;
+        border-left: 4px solid #dc3545;
+    }
+    .graph-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #1f77b4;
+        margin-bottom: 0.5rem;
+    }
+    .logo-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        margin: 1rem 0;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# Inicializar session state
 if 'analysis_client' not in st.session_state:
     st.session_state.analysis_client = AnalysisClient()
 if 'job_id' not in st.session_state:
@@ -127,129 +161,170 @@ if 'execution_history' not in st.session_state:
     st.session_state.execution_history = []
 if 'last_used_params' not in st.session_state:
     st.session_state.last_used_params = None
-if 'selected_charts' not in st.session_state:
-    st.session_state.selected_charts = []
+if 'selected_graphs' not in st.session_state:
+    st.session_state.selected_graphs = []
 
-# Diccionario de descripciones para cada tipo de gráfico
-CHART_DESCRIPTIONS = {
-    "histograma_longitud": """
-    Este histograma muestra la distribución de longitudes de secuencias. El eje horizontal representa los rangos de longitud 
-    y el vertical la frecuencia. Permite identificar la longitud más común, la variabilidad y la presencia de valores atípicos. 
-    Una distribución normal sugiere homogeneidad, mientras que múltiples picos indican subpoblaciones con características distintas.
+GRAPH_CONFIG = {
+    'hist_longitud_secuencias': {
+        'name': 'Histograma de Longitud de Secuencias',
+        'filename_patterns': ['histograma_longitud', 'length_histogram', 'hist_longitud'],
+        'order': 1
+    },
+    'distribucion_gc': {
+        'name': 'Distribución de Contenido GC',
+        'filename_patterns': ['distribucion_gc', 'gc_distribution', 'gc_content'],
+        'order': 2
+    },
+    'frecuencia_codones': {
+        'name': 'Frecuencia de Uso de Codones',
+        'filename_patterns': ['frecuencia_codones', 'codon_frequency', 'codon_usage_freq'],
+        'order': 3
+    },
+    'comparativa_uso_codones': {
+        'name': 'Comparativa de Uso de Codones entre Especies',
+        'filename_patterns': ['comparativa_codones', 'codon_comparison', 'compare_codons'],
+        'order': 4
+    },
+    'correlacion_uso_codones': {
+        'name': 'Correlación de Uso de Codones',
+        'filename_patterns': ['correlacion_codones', 'codon_correlation', 'correlation_plot'],
+        'order': 5
+    },
+    'pca_secuencias': {
+        'name': 'Análisis PCA de Secuencias',
+        'filename_patterns': ['pca_secuencias', 'pca_analysis', 'principal_components'],
+        'order': 6
+    },
+    'heatmap_correlacion': {
+        'name': 'Heatmap de Correlación',
+        'filename_patterns': ['heatmap_correlacion', 'correlation_heatmap', 'heatmap'],
+        'order': 7
+    },
+    'boxplot_longitud_por_especie': {
+        'name': 'Boxplot de Longitud por Especie',
+        'filename_patterns': ['boxplot_longitud', 'length_boxplot', 'boxplot_species'],
+        'order': 8
+    },
+    'scatter_gc_vs_longitud': {
+        'name': 'Scatter Plot: GC vs Longitud',
+        'filename_patterns': ['scatter_gc_longitud', 'gc_vs_length', 'scatter_plot'],
+        'order': 9
+    }
+}
+
+GRAPH_DESCRIPTIONS = {
+    'hist_longitud_secuencias': """
+    Este histograma muestra la distribución de longitudes de secuencias en el conjunto de datos analizado. 
+    Permite identificar patrones específicos como la presencia de secuencias cortas o largas predominantes, 
+    la variabilidad general en tamaño y posibles agrupaciones naturales. La forma de la distribución puede 
+    ser normal, sesgada o bimodal, proporcionando información valiosa sobre la homogeneidad del conjunto de 
+    datos. Una distribución simétrica sugiere uniformidad en las longitudes, mientras que múltiples picos 
+    pueden revelar la presencia de diferentes tipos de secuencias o elementos genómicos con características 
+    estructurales distintas. Este análisis inicial es fundamental para entender la composición general del 
+    genoma y detectar anomalías o características específicas de interés biológico.
     """,
     
-    "distribucion_gc": """
-    Este gráfico de densidad muestra la distribución del contenido GC. La curva representa la frecuencia de secuencias 
-    con determinado porcentaje GC. Picos pronunciados indican concentración en valores específicos, mientras distribuciones 
-    planas sugieren diversidad composicional. Modas múltiples pueden reflejar diferentes grupos genómicos.
+    'distribucion_gc': """
+    El gráfico de distribución de contenido GC muestra el porcentaje relativo de bases Guanina y Citosina 
+    presentes en las secuencias analizadas. Una distribución normal y centrada sugiere homogeneidad genética 
+    entre las muestras, mientras que distribuciones multimodales o asimétricas pueden indicar la presencia de 
+    múltiples especies, cepas distintas o diferentes regiones genómicas con composiciones variables. El contenido 
+    GC es un marcador taxonómico importante utilizado en clasificación y filogenia. Su análisis ayuda a 
+    caracterizar la composición genómica global, identificar adaptaciones ambientales específicas, y detectar 
+    posibles contaminaciones o heterogeneidades en las muestras. Valores extremos pueden indicar regiones 
+    codificantes versus no codificantes, o reflejar presiones selectivas particulares en diferentes contextos 
+    evolutivos y ecológicos.
     """,
     
-    "frecuencia_codones": """
-    Este gráfico de barras muestra la frecuencia relativa de cada codón. La altura de cada barra indica cuán común es 
-    ese codón. Permite identificar codones preferidos y raros. Patrones similares entre especies sugieren conservación 
-    evolutiva, mientras diferencias indican adaptaciones específicas.
+    'frecuencia_codones': """
+    Este gráfico de barras representa la frecuencia relativa de uso de cada codón en las secuencias del 
+    conjunto de datos. Muestra claramente las preferencias en el uso de codones, fenómeno conocido como 
+    sesgo de uso de codones, lo que puede reflejar adaptaciones genómicas o presiones evolutivas específicas. 
+    Los codones más frecuentemente utilizados generalmente están asociados con una expresión génica más 
+    eficiente y abundante disponibilidad de ARN de transferencia correspondiente. Las diferencias significativas 
+    en los patrones de uso entre especies pueden indicar distintos mecanismos de regulación de la expresión 
+    génica, niveles variables de optimización traslacional, o adaptaciones específicas a diferentes nichos 
+    ecológicos. Este análisis es fundamental para estudios de expresión génica, ingeniería genética y 
+    biología sintética.
     """,
     
-    "comparativa_codones": """
-    Este gráfico comparativo muestra las diferencias en uso de codones entre especies. Barras adyacentes para cada codón 
-    permiten visualizar preferencias específicas. Diferencias marcadas sugieren presiones evolutivas divergentes, 
-    mientras similitudes indican restricciones funcionales compartidas.
+    'comparativa_uso_codones': """
+    Este gráfico comparativo horizontal muestra las diferencias absolutas en el uso de codones entre las dos 
+    especies analizadas. Permite identificar fácilmente codones preferencialmente utilizados por cada organismo, 
+    lo que puede reflejar adaptaciones evolutivas específicas y divergencias en las estrategias de expresión 
+    génica. Las barras que se extienden hacia la derecha indican mayor uso en Salmonella, mientras que las que 
+    se extienden hacia la izquierda indican preferencia en Gallus. Las divergencias significativas pueden 
+    indicar diferentes presiones selectivas actuando sobre cada linaje, mecanismos distintos de regulación de 
+    la expresión génica, o variaciones en la disponibilidad de ARN de transferencia. Este tipo de análisis 
+    comparativo es esencial para entender la evolución molecular, diseñar sistemas de expresión heteróloga 
+    eficientes y estudiar relaciones filogenéticas entre organismos.
     """,
     
-    "correlacion_codones": """
-    Este gráfico de dispersión explora la correlación en uso de codones entre especies. Cada punto representa un codón. 
-    Una nube de puntos a lo largo de la diagonal indica correlación positiva fuerte. Dispersión aleatoria sugiere 
-    independencia, mientras patrones no lineales revelan relaciones complejas.
+    'correlacion_uso_codones': """
+    Este gráfico de dispersión explora sistemáticamente la relación cuantitativa entre el uso de codones en 
+    las dos especies comparadas. Cada punto representa un codón específico, posicionado según su frecuencia 
+    en ambas especies. Una correlación positiva fuerte, evidenciada por puntos agrupados cerca de una línea 
+    diagonal, indica patrones de uso similares entre especies, sugiriendo conservación evolutiva profunda en 
+    los mecanismos de traducción. Los puntos que se desvían significativamente de la línea de tendencia 
+    representan codones con uso diferencial marcado, potencialmente asociados a adaptaciones específicas de 
+    cada especie, diferencias en composición genómica, o distintos mecanismos regulatorios post-transcripcionales. 
+    La pendiente de la línea de regresión y el coeficiente de correlación proporcionan métricas cuantitativas 
+    de la similitud global en estrategias de uso de codones.
     """,
     
-    "boxplot_longitud": """
-    Este diagrama de cajas compara distribuciones de longitud entre especies. Cada caja muestra la mediana, cuartiles 
-    y valores extremos. Cajas superpuestas indican similitud, mientras separación sugiere diferencias significativas. 
-    Bigotes largos revelan alta variabilidad, puntos atípicos muestran secuencias excepcionales.
+    'pca_secuencias': """
+    El análisis de Componentes Principales (PCA) reduce la alta dimensionalidad de los datos de uso de codones 
+    para visualizar patrones complejos en un espacio bidimensional interpretable. Esta técnica multivariada 
+    extrae las direcciones de máxima varianza en el conjunto de datos, permitiendo identificar las principales 
+    fuentes de variación. Los agrupamientos claramente definidos indican similitudes fundamentales entre 
+    secuencias o especies, mientras que la separación espacial sugiere diferencias significativas en los perfiles 
+    de uso de codones. La proximidad de puntos representa similitudes en los patrones multidimensionales de 
+    uso de codones, permitiendo identificar agrupaciones naturales, detectar valores atípicos que pueden 
+    representar contaminación o errores, y visualizar relaciones filogenéticas. Los porcentajes de varianza 
+    explicada por cada componente principal indican la importancia relativa de cada eje en la estructura de 
+    los datos.
     """,
     
-    "pca": """
-    Este gráfico de análisis de componentes principales (PCA) reduce la dimensionalidad de datos de uso de codones. 
-    Agrupamientos de puntos indican similitudes en patrones de uso. La proximidad sugiere relación evolutiva o funcional, 
-    mientras la dispersión refleja diversidad. Ejes representan direcciones de máxima varianza.
+    'heatmap_correlacion': """
+    Este heatmap de correlación visualiza las relaciones entre diferentes variables mediante una escala de 
+    colores intuitiva y gradiente. Los tonos cálidos (rojos y naranjas) indican correlaciones positivas fuertes 
+    entre variables, mientras que los tonos fríos (azules y verdes) representan correlaciones negativas o 
+    ausencia de relación. Los patrones de bloques contiguos del mismo color sugieren agrupaciones de variables 
+    que covarían juntas, indicando posibles relaciones funcionales o regulatorias compartidas. Esta visualización 
+    matricial ayuda a identificar rápidamente relaciones complejas y patrones de co-variación en el conjunto de 
+    datos de manera intuitiva y visualmente atractiva. Es especialmente útil para detectar redundancias entre 
+    variables, identificar grupos de codones con comportamiento similar, y generar hipótesis sobre mecanismos 
+    biológicos subyacentes que controlan la expresión génica coordinada.
     """,
     
-    "heatmap": """
-    Este mapa de calor muestra similitudes entre secuencias mediante gradientes de color. Tonos cálidos indican alta 
-    similitud, fríos baja similitud. Patrones de bloques a lo largo de la diagonal sugieren agrupamientos naturales. 
-    Permite identificar clusters y relaciones a simple vista.
+    'boxplot_longitud_por_especie': """
+    Los boxplots o diagramas de caja y bigotes comparan estadísticamente la distribución completa de longitudes 
+    de secuencias entre las dos especies analizadas. Cada caja muestra la mediana (línea central), los cuartiles 
+    inferior y superior (límites de la caja), y los valores extremos (bigotes), permitiendo identificar de manera 
+    visual diferencias significativas en la variabilidad, tendencia central y presencia de valores atípicos. 
+    La superposición parcial o total de las cajas indica similitudes estadísticas en las longitudes de secuencias, 
+    mientras que la separación clara sugiere diferencias significativas y consistentes entre los organismos 
+    comparados. Los puntos individuales fuera de los bigotes representan valores atípicos que merecen atención 
+    especial. Este tipo de visualización robusta es fundamental para comparaciones estadísticas formales y para 
+    entender la variabilidad natural dentro de cada especie versus las diferencias entre especies.
     """,
     
-    "scatter_gc_longitud": """
-    Este gráfico de dispersión explora la relación entre contenido GC y longitud. Cada punto es una secuencia. 
-    Tendencia creciente sugiere correlación positiva, decreciente negativa. Nubes sin patrón indican independencia. 
-    Agrupamientos revelan subpoblaciones con características composicionales similares.
+    'scatter_gc_vs_longitud': """
+    Este gráfico de dispersión bidimensional explora sistemáticamente la posible relación entre el contenido GC 
+    y la longitud de las secuencias analizadas. Cada punto representa una secuencia individual, posicionada según 
+    sus valores en ambas dimensiones. Los patrones de distribución observables pueden revelar si existe correlación 
+    positiva, negativa o ausencia de relación entre estas dos variables fundamentales. Agrupamientos específicos 
+    en regiones del gráfico pueden indicar diferentes clases funcionales de secuencias (genes housekeeping versus 
+    específicos, regiones codificantes versus regulatorias) o distintos elementos genómicos con propiedades 
+    características. La ausencia de un patrón claro sugiere independencia estadística entre el contenido GC y la 
+    longitud de las secuencias, indicando que estos dos parámetros son determinados por factores evolutivos o 
+    funcionales distintos e independientes en los genomas analizados.
     """
 }
 
-# Configuración de gráficos disponibles
-AVAILABLE_CHARTS = [
-    {
-        "id": "histograma_longitud",
-        "name": "📊 Histograma de Longitudes",
-        "category": "Básicos",
-        "description": "Distribución de longitudes de secuencias"
-    },
-    {
-        "id": "distribucion_gc", 
-        "name": "🧬 Distribución GC",
-        "category": "Básicos",
-        "description": "Distribución del contenido de GC"
-    },
-    {
-        "id": "frecuencia_codones",
-        "name": "📈 Frecuencia de Codones", 
-        "category": "Básicos",
-        "description": "Frecuencia de uso de codones"
-    },
-    {
-        "id": "comparativa_codones",
-        "name": "⚖️ Comparativa de Codones",
-        "category": "Comparativos", 
-        "description": "Comparación de uso de codones entre especies"
-    },
-    {
-        "id": "correlacion_codones",
-        "name": "🔗 Correlación de Codones",
-        "category": "Comparativos",
-        "description": "Correlación en uso de codones"
-    },
-    {
-        "id": "boxplot_longitud", 
-        "name": "📦 Boxplot por Especie",
-        "category": "Comparativos",
-        "description": "Distribución de longitudes por especie"
-    },
-    {
-        "id": "pca",
-        "name": "🎯 Análisis PCA",
-        "category": "Avanzados",
-        "description": "Análisis de componentes principales"
-    },
-    {
-        "id": "heatmap",
-        "name": "🔥 Heatmap de Similitud", 
-        "category": "Avanzados",
-        "description": "Mapa de calor de similitudes"
-    },
-    {
-        "id": "scatter_gc_longitud",
-        "name": "💫 Scatter GC vs Longitud",
-        "category": "Avanzados", 
-        "description": "Relación entre GC y longitud"
-    }
-]
-
 
 def validar_archivo_fasta(archivo) -> Tuple[bool, Optional[str]]:
-    """
-    Valida que el archivo subido sea un FASTA válido.
-    """
+    """Valida que el archivo subido sea un FASTA válido."""
     if archivo is None:
         return False, "Por favor, sube un archivo FASTA"
     
@@ -259,6 +334,12 @@ def validar_archivo_fasta(archivo) -> Tuple[bool, Optional[str]]:
     
     if archivo.size == 0:
         return False, "El archivo está vacío"
+    
+    tamaño_mb = archivo.size / (1024 * 1024)
+    limite_mb = 200
+    
+    if tamaño_mb > limite_mb:
+        return False, f"El archivo es demasiado grande ({tamaño_mb:.2f} MB). El límite máximo es {limite_mb} MB."
     
     try:
         primeros_bytes = archivo.read(100)
@@ -272,90 +353,104 @@ def validar_archivo_fasta(archivo) -> Tuple[bool, Optional[str]]:
 
 
 def mostrar_seleccion_graficos():
-    """Muestra la interfaz de selección de gráficos tipo Likert."""
-    st.markdown('<div class="section-header">📊 Selección de Gráficos</div>', unsafe_allow_html=True)
-    st.markdown("Selecciona los gráficos que deseas generar:")
+    """Muestra la interfaz de selección de gráficos."""
+    st.markdown('<div class="section-header">Selección de Gráficos</div>', 
+                unsafe_allow_html=True)
     
-    # Inicializar selección si es necesario
-    if not st.session_state.selected_charts:
-        st.session_state.selected_charts = [chart["id"] for chart in AVAILABLE_CHARTS]
+    st.markdown("""
+    <div class="likert-scale">
+    <p><strong>Selecciona los gráficos que deseas generar:</strong></p>
+    <p>Marca las casillas correspondientes a los gráficos que necesitas para tu análisis.</p>
+    </div>
+    """, unsafe_allow_html=True)
     
-    # Organizar por categorías
-    categorias = {}
-    for chart in AVAILABLE_CHARTS:
-        if chart["category"] not in categorias:
-            categorias[chart["category"]] = []
-        categorias[chart["category"]].append(chart)
+    col1, col2, col3 = st.columns(3)
     
-    # Mostrar en columnas
-    cols = st.columns(len(categorias))
+    selected_graphs = []
     
-    for idx, (categoria, charts) in enumerate(categorias.items()):
-        with cols[idx]:
-            st.subheader(f"{categoria}")
-            for chart in charts:
-                # Crear un key único para cada checkbox
-                key = f"chart_{chart['id']}"
-                selected = st.checkbox(
-                    f"**{chart['name']}**",
-                    value=chart["id"] in st.session_state.selected_charts,
-                    key=key,
-                    help=chart["description"]
-                )
-                
-                # Actualizar la lista de selección
-                if selected and chart["id"] not in st.session_state.selected_charts:
-                    st.session_state.selected_charts.append(chart["id"])
-                elif not selected and chart["id"] in st.session_state.selected_charts:
-                    st.session_state.selected_charts.remove(chart["id"])
+    with col1:
+        st.subheader("Gráficos Básicos")
+        for graph_key in ['hist_longitud_secuencias', 'distribucion_gc', 'frecuencia_codones']:
+            if st.checkbox(GRAPH_CONFIG[graph_key]['name'], key=graph_key):
+                selected_graphs.append(graph_key)
+    
+    with col2:
+        st.subheader("Gráficos Comparativos")
+        for graph_key in ['comparativa_uso_codones', 'correlacion_uso_codones', 'boxplot_longitud_por_especie']:
+            if st.checkbox(GRAPH_CONFIG[graph_key]['name'], key=graph_key):
+                selected_graphs.append(graph_key)
+    
+    with col3:
+        st.subheader("Gráficos Avanzados")
+        for graph_key in ['pca_secuencias', 'heatmap_correlacion', 'scatter_gc_vs_longitud']:
+            if st.checkbox(GRAPH_CONFIG[graph_key]['name'], key=graph_key):
+                selected_graphs.append(graph_key)
+    
+    if selected_graphs:
+        st.markdown(f'<div class="success-message">{len(selected_graphs)} gráfico(s) seleccionado(s)</div>', 
+                   unsafe_allow_html=True)
+        with st.expander("Ver gráficos seleccionados"):
+            for graph_key in selected_graphs:
+                st.write(f"- {GRAPH_CONFIG[graph_key]['name']}")
+    else:
+        st.markdown('<div class="warning-message">No se han seleccionado gráficos. No se generarán visualizaciones.</div>', 
+                   unsafe_allow_html=True)
+    
+    return selected_graphs
 
 
-def ejecutar_analisis(salmonella_file, gallus_file, params: Dict):
+def encontrar_imagen_grafico(images: List[str], graph_key: str) -> Optional[str]:
+    """Encuentra la imagen correspondiente a un tipo de gráfico."""
+    if not images:
+        return None
+    
+    patterns = GRAPH_CONFIG[graph_key]['filename_patterns']
+    
+    for img_path in images:
+        img_name = Path(img_path).stem.lower()
+        
+        for pattern in patterns:
+            if pattern in img_name:
+                return img_path
+        
+        if graph_key in img_name:
+            return img_path
+    
+    return None
+
+
+def ejecutar_analisis(salmonella_file, gallus_file, params: Dict, selected_graphs: List[str]):
     """Ejecuta el análisis genético."""
     try:
-        if salmonella_file is None or gallus_file is None:
-            raise ValueError("Ambos archivos FASTA son requeridos")
+        if salmonella_file is None:
+            raise ValueError("El archivo de Salmonella no está disponible")
+        if gallus_file is None:
+            raise ValueError("El archivo de Gallus no está disponible")
         
-        # Mostrar información
         tamaño_sal = salmonella_file.size / (1024 * 1024)
         tamaño_gall = gallus_file.size / (1024 * 1024)
         
-        st.write(f"🔍 **Información del análisis:**")
+        st.write("**Información del análisis:**")
         st.write(f"- Archivo Salmonella: {salmonella_file.name} ({tamaño_sal:.2f} MB)")
         st.write(f"- Archivo Gallus: {gallus_file.name} ({tamaño_gall:.2f} MB)")
-        st.write(f"- Gráficos seleccionados: {len(st.session_state.selected_charts)}")
+        st.write(f"- Gráficos seleccionados: {len(selected_graphs)}")
+        st.write(f"- Parámetros: min_len={params.get('min_len', 0)}, limpiar_ns={params.get('limpiar_ns', True)}, top_codons={params.get('top_codons', 20)}")
         
-        # Leer archivos
         with st.spinner("Leyendo archivos FASTA..."):
-            salmonella_content = salmonella_file.read()
-            gallus_content = gallus_file.read()
+            salmonella_content = salmonella_file.getvalue()
+            gallus_content = gallus_file.getvalue()
         
-        # Resetear punteros
-        salmonella_file.seek(0)
-        gallus_file.seek(0)
+        params['selected_graphs'] = selected_graphs
         
-        # Agregar gráficos seleccionados a los parámetros
-        params['selected_charts'] = st.session_state.selected_charts
-        
-        # Ejecutar análisis
-        if st.session_state.analysis_client.mode == "API":
+        with st.spinner("Ejecutando análisis genético..."):
             resultado = st.session_state.analysis_client.start_analysis(
                 salmonella_content,
                 gallus_content,
                 params
             )
-            st.session_state.job_id = resultado.get('jobId')
-            st.session_state.analysis_status = 'SUBMITTED'
-        else:
-            resultado = st.session_state.analysis_client.start_analysis(
-                salmonella_content,
-                gallus_content,
-                params
-            )
-            st.session_state.analysis_status = resultado.get('status')
-            st.session_state.analysis_results = resultado.get('results')
+            st.session_state.analysis_status = resultado.get('status', 'COMPLETED')
+            st.session_state.analysis_results = resultado
         
-        # Guardar parámetros
         st.session_state.last_params = {
             'salmonella_file': salmonella_file,
             'gallus_file': gallus_file,
@@ -363,226 +458,188 @@ def ejecutar_analisis(salmonella_file, gallus_file, params: Dict):
         }
         
         st.session_state.last_used_params = params.copy()
+        st.session_state.selected_graphs = selected_graphs
         
-        # Historial
         st.session_state.execution_history.append({
             'job_id': st.session_state.job_id or 'LOCAL',
             'timestamp': time.strftime("%Y-%m-%d %H:%M:%S"),
-            'status': st.session_state.analysis_status
+            'status': st.session_state.analysis_status,
+            'graphs': len(selected_graphs)
         })
         
         return True
         
-    except MemoryError as e:
-        st.session_state.error_message = "Error de memoria: Archivo demasiado grande."
-        st.session_state.analysis_status = 'FAILED'
-        st.error("❌ **Error de Memoria**: Archivo demasiado grande.")
-        return False
     except Exception as e:
         error_msg = str(e)
         st.session_state.error_message = error_msg
         st.session_state.analysis_status = 'FAILED'
-        st.error(f"❌ **Error**: {error_msg}")
+        st.markdown(f'<div class="error-message">Error al ejecutar análisis: {error_msg}</div>', 
+                   unsafe_allow_html=True)
         return False
 
 
-def mostrar_graficos_con_descripciones(images: List, chart_mapping: Dict):
-    """Muestra los gráficos con sus descripciones en contenedores organizados."""
-    st.markdown('<div class="section-header">📈 Gráficos Generados</div>', unsafe_allow_html=True)
+def mostrar_grafico_con_descripcion(imagen_path: str, graph_key: str, graph_name: str):
+    """Muestra un gráfico con su descripción en el layout solicitado."""
+    st.markdown('<div class="graph-container">', unsafe_allow_html=True)
     
-    # Organizar gráficos por categoría
-    categorias = {}
-    for chart_id in st.session_state.selected_charts:
-        chart_info = next((c for c in AVAILABLE_CHARTS if c["id"] == chart_id), None)
-        if chart_info:
-            categoria = chart_info["category"]
-            if categoria not in categorias:
-                categorias[categoria] = []
-            categorias[categoria].append(chart_info)
+    col1, col2 = st.columns([1, 1])
     
-    # Mostrar por categorías
-    for categoria, charts in categorias.items():
-        st.subheader(f"📁 {categoria}")
-        
-        for chart_info in charts:
-            chart_id = chart_info["id"]
-            
-            if chart_id not in chart_mapping:
-                st.warning(f"⚠️ Gráfico no generado: {chart_info['name']}")
-                continue
-            
-            image_path = chart_mapping[chart_id]
-            
-            # Contenedor para gráfico y descripción
-            with st.container():
-                st.markdown(f'<div class="chart-container">', unsafe_allow_html=True)
-                st.markdown(f'<div class="chart-title">{chart_info["name"]}</div>', unsafe_allow_html=True)
-                
-                # Dos columnas: gráfico y descripción
-                col_grafico, col_desc = st.columns([1, 1])
-                
-                with col_grafico:
-                    try:
-                        if st.session_state.analysis_client.mode == "API":
-                            import requests
-                            response = requests.get(image_path)
-                            st.image(response.content, use_container_width=True)
-                        else:
-                            if Path(image_path).exists():
-                                st.image(image_path, use_container_width=True)
-                    except Exception as e:
-                        st.error(f"Error al cargar imagen: {e}")
-                
-                with col_desc:
-                    descripcion = CHART_DESCRIPTIONS.get(chart_id, "Descripción no disponible.")
-                    st.markdown(f'<div class="chart-description">{descripcion}</div>', unsafe_allow_html=True)
-                
-                st.markdown('</div>', unsafe_allow_html=True)
+    with col1:
+        st.markdown('<div class="graph-image-container">', unsafe_allow_html=True)
+        try:
+            if Path(imagen_path).exists():
+                st.image(imagen_path, use_container_width=True)
+            else:
+                st.markdown(f'<div class="error-message">Archivo no encontrado: {imagen_path}</div>', 
+                           unsafe_allow_html=True)
+        except Exception as e:
+            st.markdown(f'<div class="error-message">Error al cargar imagen: {str(e)}</div>', 
+                       unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f'<div class="graph-title">{graph_name}</div>', unsafe_allow_html=True)
+        if graph_key in GRAPH_DESCRIPTIONS:
+            st.markdown(
+                f'<div class="graph-description">{GRAPH_DESCRIPTIONS[graph_key]}</div>',
+                unsafe_allow_html=True
+            )
+        else:
+            st.markdown('<div class="warning-message">Descripción no disponible</div>', 
+                       unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 
 def mostrar_resultados(resultados: Dict):
-    """Muestra los resultados del análisis con gráficos organizados."""
-    st.markdown('<div class="section-header">📊 Resultados del Análisis</div>', unsafe_allow_html=True)
+    """Muestra los resultados del análisis."""
+    st.markdown('<div class="section-header">Resultados del Análisis</div>', 
+                unsafe_allow_html=True)
     
-    # Mostrar tablas CSV
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("📋 Resumen de Métricas")
+        st.subheader("Resumen de Métricas")
         try:
-            if st.session_state.analysis_client.mode == "API":
-                import requests
-                resumen_csv_url = resultados.get('resumen_csv_url')
-                response = requests.get(resumen_csv_url)
-                df_metricas = pd.read_csv(io.StringIO(response.text))
+            df_metricas = None
+            resumen_csv_path = resultados.get('resumen_csv_path')
+            if resumen_csv_path and Path(resumen_csv_path).exists():
+                df_metricas = pd.read_csv(resumen_csv_path)
             else:
-                df_metricas = pd.read_csv(resultados.get('resumen_csv_path'))
+                st.markdown('<div class="warning-message">No se encontró el archivo de métricas</div>', 
+                           unsafe_allow_html=True)
             
-            st.dataframe(df_metricas.head(50), use_container_width=True)
-            
-            csv_metricas = df_metricas.to_csv(index=False)
-            st.download_button(
-                label="📥 Descargar resumen_metricas.csv",
-                data=csv_metricas,
-                file_name="resumen_metricas.csv",
-                mime="text/csv"
-            )
+            if df_metricas is not None and not df_metricas.empty:
+                st.dataframe(df_metricas, use_container_width=True)
+                csv_metricas = df_metricas.to_csv(index=False)
+                st.download_button(
+                    label="Descargar resumen_metricas.csv",
+                    data=csv_metricas,
+                    file_name="resumen_metricas.csv",
+                    mime="text/csv"
+                )
         except Exception as e:
-            st.error(f"Error al cargar métricas: {e}")
+            st.markdown(f'<div class="error-message">Error al cargar métricas: {e}</div>', 
+                       unsafe_allow_html=True)
     
     with col2:
-        st.subheader("🧬 Uso de Codones")
+        st.subheader("Uso de Codones")
         try:
-            if st.session_state.analysis_client.mode == "API":
-                import requests
-                codon_csv_url = resultados.get('codon_csv_url')
-                response = requests.get(codon_csv_url)
-                df_codones = pd.read_csv(io.StringIO(response.text))
+            df_codones = None
+            codon_csv_path = resultados.get('codon_csv_path')
+            if codon_csv_path and Path(codon_csv_path).exists():
+                df_codones = pd.read_csv(codon_csv_path)
             else:
-                df_codones = pd.read_csv(resultados.get('codon_csv_path'))
+                st.markdown('<div class="warning-message">No se encontró el archivo de codones</div>', 
+                           unsafe_allow_html=True)
             
-            st.dataframe(df_codones.head(50), use_container_width=True)
-            
-            csv_codones = df_codones.to_csv(index=False)
-            st.download_button(
-                label="📥 Descargar codon_usage.csv",
-                data=csv_codones,
-                file_name="codon_usage.csv",
-                mime="text/csv"
-            )
+            if df_codones is not None and not df_codones.empty:
+                st.dataframe(df_codones, use_container_width=True)
+                csv_codones = df_codones.to_csv(index=False)
+                st.download_button(
+                    label="Descargar codon_usage.csv",
+                    data=csv_codones,
+                    file_name="codon_usage.csv",
+                    mime="text/csv"
+                )
         except Exception as e:
-            st.error(f"Error al cargar codones: {e}")
+            st.markdown(f'<div class="error-message">Error al cargar codones: {e}</div>', 
+                       unsafe_allow_html=True)
     
-    # Mostrar gráficos organizados
+    st.markdown('<div class="section-header">Gráficos Generados</div>', 
+                unsafe_allow_html=True)
+    
     images = resultados.get('images', [])
     
-    # Crear mapeo de gráficos (asumiendo que el backend devuelve en orden)
-    chart_mapping = {}
-    for idx, chart_id in enumerate(st.session_state.selected_charts):
-        if idx < len(images):
-            chart_mapping[chart_id] = images[idx]
+    if not images:
+        st.markdown('<div class="warning-message">No se generaron gráficos en el análisis</div>', 
+                   unsafe_allow_html=True)
+        return
     
-    mostrar_graficos_con_descripciones(images, chart_mapping)
+    if not st.session_state.selected_graphs:
+        st.markdown('<div class="warning-message">No se seleccionaron gráficos para mostrar</div>', 
+                   unsafe_allow_html=True)
+        return
     
-    # Botón de descarga ZIP
-    st.subheader("📦 Descargar Reporte Completo")
-    
-    try:
-        if st.session_state.analysis_client.mode == "API":
-            zip_url = resultados.get('zip_url')
-            if zip_url:
-                st.markdown(f"**[Descargar ZIP completo]({zip_url})**")
+    displayed_graphs = 0
+    for graph_key in sorted(GRAPH_CONFIG.keys(), key=lambda x: GRAPH_CONFIG[x]['order']):
+        if graph_key in st.session_state.selected_graphs:
+            imagen_path = encontrar_imagen_grafico(images, graph_key)
+            
+            if imagen_path:
+                mostrar_grafico_con_descripcion(
+                    imagen_path, 
+                    graph_key, 
+                    GRAPH_CONFIG[graph_key]['name']
+                )
+                displayed_graphs += 1
             else:
-                st.warning("El backend no proporcionó un archivo ZIP")
-        else:
-            resumen_csv_path = resultados.get('resumen_csv_path')
-            if resumen_csv_path:
-                resultados_dir = Path(resumen_csv_path).parent
-                zip_path = crear_zip_resultados(str(resultados_dir))
-                
-                if Path(zip_path).exists():
-                    with open(zip_path, 'rb') as f:
-                        st.download_button(
-                            label="📥 Descargar reporte ZIP completo",
-                            data=f.read(),
-                            file_name="resultados_analisis.zip",
-                            mime="application/zip"
-                        )
-    except Exception as e:
-        st.error(f"Error al crear ZIP: {e}")
+                st.markdown(f'<div class="warning-message">No se encontró el gráfico: {GRAPH_CONFIG[graph_key]["name"]}</div>', 
+                           unsafe_allow_html=True)
+    
+    if displayed_graphs == 0:
+        st.markdown('<div class="error-message">No se pudieron cargar ninguno de los gráficos seleccionados</div>', 
+                   unsafe_allow_html=True)
+        st.markdown(f'<div class="warning-message">Archivos disponibles: {[Path(img).name for img in images]}</div>', 
+                   unsafe_allow_html=True)
+    
+    zip_path = resultados.get('zip_path')
+    if zip_path and Path(zip_path).exists():
+        st.markdown('<div class="section-header">Descarga de Resultados</div>', 
+                    unsafe_allow_html=True)
+        with open(zip_path, 'rb') as f:
+            st.download_button(
+                label="Descargar todos los resultados (ZIP)",
+                data=f.read(),
+                file_name="resultados_analisis.zip",
+                mime="application/zip",
+                type="primary",
+                use_container_width=True
+            )
 
 
 def main():
-    """Función principal de la aplicación mejorada."""
+    """Función principal de la aplicación."""
     
-    # Logo centrado
-    logo_path = Path(__file__).parent / "assets" / "logo.png"
+    st.markdown('<div class="logo-container">', unsafe_allow_html=True)
+    st.markdown('<div style="text-align: center; font-size: 3rem; margin: 1rem 0;">🧬</div>', 
+               unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
     
-    if logo_path.exists():
-        import base64
-        try:
-            with open(logo_path, "rb") as img_file:
-                img_data = base64.b64encode(img_file.read()).decode()
-            
-            st.markdown(
-                f"""
-                <div style="text-align: center; width: 100%; margin: 1rem 0;">
-                    <img src="data:image/png;base64,{img_data}" style="max-width: 150px; height: auto; margin: 0 auto; display: inline-block;">
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-        except Exception as e:
-            col1, col2, col3 = st.columns([1, 1, 1])
-            with col2:
-                st.image(str(logo_path), width=150)
-    else:
-        st.markdown(
-            "<div style='text-align: center; font-size: 3rem; margin-bottom: 1rem;'>🧬</div>", 
-            unsafe_allow_html=True
-        )
-    
-    # Título
     st.markdown('<div class="main-header">SalmoAvianLight</div>', unsafe_allow_html=True)
     st.markdown('<div class="subheader">Comparación de Secuencias: Salmonella vs Gallus</div>', 
                 unsafe_allow_html=True)
     
     st.markdown("""
-    <div style="text-align: center; color: #888; margin-bottom: 2rem;">
-    Herramienta profesional para análisis genético comparativo.<br>
-    Selecciona los gráficos que necesitas y obtén resultados detallados con explicaciones.
+    <div style="text-align: center; color: #666; margin-bottom: 2rem;">
+    Herramienta de análisis genético para comparar secuencias de Salmonella y Gallus.<br>
+    Sube archivos FASTA, selecciona los gráficos requeridos y ejecuta el análisis.
     </div>
     """, unsafe_allow_html=True)
     
-    # Indicador de modo
-    modo = st.session_state.analysis_client.mode
-    if modo == "API":
-        st.info(f"🌐 Modo API: Conectado a {st.session_state.analysis_client.base_url}")
-    else:
-        st.info("💻 Modo Local: Ejecutando análisis en este servidor")
+    st.info("Modo Local: Ejecutando análisis en este servidor")
     
-    # Sección 1: Carga de archivos
-    st.markdown('<div class="section-header">1️⃣ Carga de Archivos FASTA</div>', 
+    st.markdown('<div class="section-header">Carga de Archivos FASTA</div>', 
                 unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
@@ -597,11 +654,16 @@ def main():
         )
         if salmonella_file:
             tamaño_mb = salmonella_file.size / (1024 * 1024)
+            st.markdown(f'<div class="file-info">Archivo detectado: {salmonella_file.name} ({tamaño_mb:.2f} MB)</div>', 
+                       unsafe_allow_html=True)
+            
             es_valido, mensaje = validar_archivo_fasta(salmonella_file)
             if not es_valido:
-                st.error(f"❌ {mensaje}")
+                st.markdown(f'<div class="error-message">Error: {mensaje}</div>', 
+                           unsafe_allow_html=True)
             else:
-                st.success(f"✅ Archivo válido: {salmonella_file.name} ({tamaño_mb:.2f} MB)")
+                st.markdown(f'<div class="success-message">Archivo válido: {salmonella_file.name} ({tamaño_mb:.2f} MB)</div>', 
+                           unsafe_allow_html=True)
     
     with col2:
         st.subheader("Gallus")
@@ -613,17 +675,20 @@ def main():
         )
         if gallus_file:
             tamaño_mb = gallus_file.size / (1024 * 1024)
+            st.markdown(f'<div class="file-info">Archivo detectado: {gallus_file.name} ({tamaño_mb:.2f} MB)</div>', 
+                       unsafe_allow_html=True)
+            
             es_valido, mensaje = validar_archivo_fasta(gallus_file)
             if not es_valido:
-                st.error(f"❌ {mensaje}")
+                st.markdown(f'<div class="error-message">Error: {mensaje}</div>', 
+                           unsafe_allow_html=True)
             else:
-                st.success(f"✅ Archivo válido: {gallus_file.name} ({tamaño_mb:.2f} MB)")
+                st.markdown(f'<div class="success-message">Archivo válido: {gallus_file.name} ({tamaño_mb:.2f} MB)</div>', 
+                           unsafe_allow_html=True)
     
-    # Sección 2: Selección de gráficos
-    mostrar_seleccion_graficos()
+    selected_graphs = mostrar_seleccion_graficos()
     
-    # Sección 3: Parámetros
-    st.markdown('<div class="section-header">2️⃣ Parámetros de Análisis</div>', 
+    st.markdown('<div class="section-header">Parámetros de Análisis</div>', 
                 unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns(3)
@@ -660,27 +725,23 @@ def main():
         'top_codons': top_codons
     }
     
-    # Verificar cambios en parámetros
     params_changed = False
     if st.session_state.last_used_params is not None:
         params_changed = st.session_state.last_used_params != params
     
     if params_changed and st.session_state.analysis_status == 'COMPLETED':
-        st.warning("⚠️ **Parámetros modificados**: Ejecuta un nuevo análisis para ver resultados actualizados.")
+        st.markdown('<div class="warning-message">Parámetros modificados: Los resultados mostrados fueron generados con parámetros diferentes. Ejecuta un nuevo análisis para ver los resultados con los parámetros actuales.</div>', 
+                   unsafe_allow_html=True)
     
-    # Sección 4: Ejecutar análisis
-    st.markdown('<div class="section-header">3️⃣ Ejecutar Análisis</div>', 
+    st.markdown('<div class="section-header">Ejecutar Análisis</div>', 
                 unsafe_allow_html=True)
     
-    col1, col2 = st.columns([1, 3])
-    
-    with col1:
-        ejecutar_btn = st.button(
-            "🚀 Analizar",
-            type="primary",
-            use_container_width=True,
-            disabled=(salmonella_file is None or gallus_file is None)
-        )
+    ejecutar_btn = st.button(
+        "Iniciar Análisis",
+        type="primary",
+        use_container_width=True,
+        disabled=(salmonella_file is None or gallus_file is None)
+    )
     
     if ejecutar_btn:
         if salmonella_file and gallus_file:
@@ -688,104 +749,57 @@ def main():
             gallus_valido, msg_gall = validar_archivo_fasta(gallus_file)
             
             if not salmonella_valido:
-                st.error(f"Error en archivo Salmonella: {msg_sal}")
+                st.markdown(f'<div class="error-message">Error en archivo Salmonella: {msg_sal}</div>', 
+                           unsafe_allow_html=True)
             elif not gallus_valido:
-                st.error(f"Error en archivo Gallus: {msg_gall}")
+                st.markdown(f'<div class="error-message">Error en archivo Gallus: {msg_gall}</div>', 
+                           unsafe_allow_html=True)
             else:
-                # Limpiar estado anterior
                 st.session_state.analysis_results = None
                 st.session_state.analysis_status = None
                 st.session_state.error_message = None
                 
-                # Limpiar directorio temporal
-                if st.session_state.analysis_client.temp_dir:
-                    try:
-                        if os.path.exists(st.session_state.analysis_client.temp_dir):
-                            shutil.rmtree(st.session_state.analysis_client.temp_dir, ignore_errors=True)
-                    except Exception:
-                        pass
-                
-                # Ejecutar análisis
                 with st.spinner("Ejecutando análisis..."):
-                    if ejecutar_analisis(salmonella_file, gallus_file, params):
-                        st.success("✅ Análisis iniciado correctamente")
+                    if ejecutar_analisis(salmonella_file, gallus_file, params, selected_graphs):
+                        st.markdown('<div class="success-message">Análisis completado correctamente</div>', 
+                                   unsafe_allow_html=True)
                         st.rerun()
                     else:
-                        st.error(f"❌ Error al ejecutar análisis: {st.session_state.error_message}")
+                        st.markdown(f'<div class="error-message">Error al ejecutar análisis: {st.session_state.error_message}</div>', 
+                                   unsafe_allow_html=True)
     
-    # Sección 5: Estado y resultados
     if st.session_state.analysis_status:
-        st.markdown('<div class="section-header">4️⃣ Estado del Análisis</div>', 
+        st.markdown('<div class="section-header">Estado del Análisis</div>', 
                     unsafe_allow_html=True)
         
         status = st.session_state.analysis_status
         
-        if status == 'SUBMITTED':
-            st.info("⏳ Análisis enviado. Esperando procesamiento...")
-            if st.session_state.analysis_client.mode == "API" and st.session_state.job_id:
-                if st.button("🔄 Actualizar estado", key="refresh_status"):
-                    status_response = st.session_state.analysis_client.get_status(st.session_state.job_id)
-                    nuevo_status = status_response.get('status')
-                    st.session_state.analysis_status = nuevo_status
-                    if status_response.get('message'):
-                        st.write(status_response.get('message'))
-                    st.rerun()
-        
-        elif status == 'RUNNING':
-            st.info("🔄 Análisis en progreso...")
-            progress_bar = st.progress(0.5)
-            st.write("Procesando secuencias y generando gráficos...")
+        if status == 'COMPLETED':
+            st.markdown('<div class="status-completed">Análisis completado exitosamente</div>', 
+                       unsafe_allow_html=True)
             
-            if st.session_state.analysis_client.mode == "API" and st.session_state.job_id:
-                if st.button("🔄 Actualizar estado", key="refresh_running"):
-                    status_response = st.session_state.analysis_client.get_status(st.session_state.job_id)
-                    nuevo_status = status_response.get('status')
-                    st.session_state.analysis_status = nuevo_status
-                    st.rerun()
-        
-        elif status == 'COMPLETED':
-            st.success("✅ Análisis completado exitosamente")
-            
-            # Obtener resultados si estamos en modo API
-            if st.session_state.analysis_client.mode == "API" and st.session_state.job_id:
-                try:
-                    resultados = st.session_state.analysis_client.get_results(st.session_state.job_id)
-                    st.session_state.analysis_results = resultados
-                except Exception as e:
-                    st.error(f"Error al obtener resultados: {e}")
-                    st.session_state.analysis_results = None
-            
-            # Mostrar resultados
             if st.session_state.analysis_results:
                 mostrar_resultados(st.session_state.analysis_results)
-            else:
-                st.warning("Los resultados no están disponibles aún.")
         
         elif status == 'FAILED':
-            st.error("❌ El análisis falló")
+            st.markdown('<div class="status-failed">El análisis ha fallado</div>', 
+                       unsafe_allow_html=True)
             if st.session_state.error_message:
-                st.error(f"Error: {st.session_state.error_message}")
-            
-            if st.session_state.last_params:
-                if st.button("🔄 Reintentar análisis"):
-                    st.session_state.analysis_status = None
-                    st.session_state.error_message = None
-                    st.rerun()
+                st.markdown(f'<div class="error-message">Error: {st.session_state.error_message}</div>', 
+                           unsafe_allow_html=True)
+        
+        else:
+            st.markdown(f'<div class="status-running">Estado: {status}</div>', 
+                       unsafe_allow_html=True)
     
-    # Historial
     if st.session_state.execution_history:
-        with st.expander("📜 Historial de Ejecuciones"):
-            hist_df = pd.DataFrame(st.session_state.execution_history)
-            st.dataframe(hist_df, use_container_width=True)
-    
-    # Footer
-    st.markdown("---")
-    st.markdown("""
-    <div style="text-align: center; color: #888; font-size: 0.9rem;">
-    Herramienta de Análisis Genético - Salmonella vs Gallus<br>
-    Para analistas de laboratorio - Versión Mejorada
-    </div>
-    """, unsafe_allow_html=True)
+        with st.expander("Historial de Ejecuciones"):
+            for idx, exec_record in enumerate(reversed(st.session_state.execution_history[-5:])):
+                st.write(f"**Ejecución {len(st.session_state.execution_history) - idx}**")
+                st.write(f"- Hora: {exec_record['timestamp']}")
+                st.write(f"- Estado: {exec_record['status']}")
+                st.write(f"- Gráficos: {exec_record['graphs']}")
+                st.write("---")
 
 
 if __name__ == "__main__":
