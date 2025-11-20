@@ -53,15 +53,28 @@ st.markdown("""
         padding-bottom: 0.5rem;
         border-bottom: 2px solid #1f77b4;
     }
+    .graph-container {
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1rem 0;
+        background-color: #ffffff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .graph-image {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 4px;
+        background-color: #f8f9fa;
+    }
     .graph-description {
         background-color: #f8f9fa;
         padding: 1rem;
-        border-radius: 0.5rem;
+        border-radius: 4px;
         border-left: 4px solid #1f77b4;
-        margin-top: 0.5rem;
-        margin-bottom: 1.5rem;
         font-size: 0.9rem;
         line-height: 1.4;
+        height: 100%;
     }
     .likert-scale {
         background-color: #f0f2f6;
@@ -93,6 +106,24 @@ st.markdown("""
         border-radius: 0.25rem;
         margin: 0.5rem 0;
     }
+    .status-running {
+        background-color: #cce5ff;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin: 1rem 0;
+    }
+    .status-completed {
+        background-color: #d4edda;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin: 1rem 0;
+    }
+    .status-failed {
+        background-color: #f8d7da;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin: 1rem 0;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -116,17 +147,44 @@ if 'last_used_params' not in st.session_state:
 if 'selected_graphs' not in st.session_state:
     st.session_state.selected_graphs = []
 
-# Diccionario de gráficos disponibles
+# Diccionario de gráficos disponibles con orden específico
 AVAILABLE_GRAPHS = {
-    'hist_longitud_secuencias': 'Histograma de Longitud de Secuencias',
-    'distribucion_gc': 'Distribución de Contenido GC',
-    'frecuencia_codones': 'Frecuencia de Uso de Codones',
-    'comparativa_uso_codones': 'Comparativa de Uso de Codones entre Especies',
-    'correlacion_uso_codones': 'Correlación de Uso de Codones',
-    'pca_secuencias': 'Análisis PCA de Secuencias',
-    'heatmap_correlacion': 'Heatmap de Correlación',
-    'boxplot_longitud_por_especie': 'Boxplot de Longitud por Especie',
-    'scatter_gc_vs_longitud': 'Scatter Plot: GC vs Longitud'
+    'hist_longitud_secuencias': {
+        'name': 'Histograma de Longitud de Secuencias',
+        'order': 1
+    },
+    'distribucion_gc': {
+        'name': 'Distribución de Contenido GC',
+        'order': 2
+    },
+    'frecuencia_codones': {
+        'name': 'Frecuencia de Uso de Codones',
+        'order': 3
+    },
+    'comparativa_uso_codones': {
+        'name': 'Comparativa de Uso de Codones entre Especies',
+        'order': 4
+    },
+    'correlacion_uso_codones': {
+        'name': 'Correlación de Uso de Codones',
+        'order': 5
+    },
+    'pca_secuencias': {
+        'name': 'Análisis PCA de Secuencias',
+        'order': 6
+    },
+    'heatmap_correlacion': {
+        'name': 'Heatmap de Correlación',
+        'order': 7
+    },
+    'boxplot_longitud_por_especie': {
+        'name': 'Boxplot de Longitud por Especie',
+        'order': 8
+    },
+    'scatter_gc_vs_longitud': {
+        'name': 'Scatter Plot: GC vs Longitud',
+        'order': 9
+    }
 }
 
 # Diccionario de descripciones de gráficos
@@ -276,19 +334,19 @@ def mostrar_seleccion_graficos():
     with col1:
         st.subheader("Gráficos Básicos")
         for graph_key in ['hist_longitud_secuencias', 'distribucion_gc', 'frecuencia_codones']:
-            if st.checkbox(AVAILABLE_GRAPHS[graph_key], key=graph_key):
+            if st.checkbox(AVAILABLE_GRAPHS[graph_key]['name'], key=graph_key):
                 selected_graphs.append(graph_key)
     
     with col2:
         st.subheader("Gráficos Comparativos")
         for graph_key in ['comparativa_uso_codones', 'correlacion_uso_codones', 'boxplot_longitud_por_especie']:
-            if st.checkbox(AVAILABLE_GRAPHS[graph_key], key=graph_key):
+            if st.checkbox(AVAILABLE_GRAPHS[graph_key]['name'], key=graph_key):
                 selected_graphs.append(graph_key)
     
     with col3:
         st.subheader("Gráficos Avanzados")
         for graph_key in ['pca_secuencias', 'heatmap_correlacion', 'scatter_gc_vs_longitud']:
-            if st.checkbox(AVAILABLE_GRAPHS[graph_key], key=graph_key):
+            if st.checkbox(AVAILABLE_GRAPHS[graph_key]['name'], key=graph_key):
                 selected_graphs.append(graph_key)
     
     # Mostrar resumen de selección
@@ -297,7 +355,7 @@ def mostrar_seleccion_graficos():
                    unsafe_allow_html=True)
         with st.expander("Ver gráficos seleccionados"):
             for graph_key in selected_graphs:
-                st.write(f"- {AVAILABLE_GRAPHS[graph_key]}")
+                st.write(f"- {AVAILABLE_GRAPHS[graph_key]['name']}")
     else:
         st.markdown('<div class="warning-message">No se han seleccionado gráficos. No se generarán visualizaciones.</div>', 
                    unsafe_allow_html=True)
@@ -396,6 +454,15 @@ def ejecutar_analisis(salmonella_file, gallus_file, params: Dict, selected_graph
         return False
 
 
+def obtener_imagen_por_tipo(images: List[str], graph_type: str) -> Optional[str]:
+    """Encuentra la imagen correspondiente al tipo de gráfico."""
+    for img_path in images:
+        img_name = Path(img_path).stem.lower()
+        if graph_type in img_name:
+            return img_path
+    return None
+
+
 def mostrar_resultados(resultados: Dict):
     """Muestra los resultados del análisis con descripciones de gráficos."""
     st.markdown('<div class="section-header">Resultados del Análisis</div>', 
@@ -410,11 +477,21 @@ def mostrar_resultados(resultados: Dict):
             if st.session_state.analysis_client.mode == "API":
                 import requests
                 resumen_csv_url = resultados.get('resumen_csv_url')
-                response = requests.get(resumen_csv_url)
-                df_metricas = pd.read_csv(io.StringIO(response.text))
+                if resumen_csv_url:
+                    response = requests.get(resumen_csv_url)
+                    df_metricas = pd.read_csv(io.StringIO(response.text))
+                else:
+                    st.markdown('<div class="warning-message">No se encontró el archivo de métricas</div>', 
+                               unsafe_allow_html=True)
+                    return
             else:
                 resumen_csv_path = resultados.get('resumen_csv_path')
-                df_metricas = pd.read_csv(resumen_csv_path)
+                if resumen_csv_path and Path(resumen_csv_path).exists():
+                    df_metricas = pd.read_csv(resumen_csv_path)
+                else:
+                    st.markdown('<div class="warning-message">No se encontró el archivo de métricas</div>', 
+                               unsafe_allow_html=True)
+                    return
             
             st.dataframe(df_metricas.head(50), use_container_width=True)
             
@@ -435,11 +512,21 @@ def mostrar_resultados(resultados: Dict):
             if st.session_state.analysis_client.mode == "API":
                 import requests
                 codon_csv_url = resultados.get('codon_csv_url')
-                response = requests.get(codon_csv_url)
-                df_codones = pd.read_csv(io.StringIO(response.text))
+                if codon_csv_url:
+                    response = requests.get(codon_csv_url)
+                    df_codones = pd.read_csv(io.StringIO(response.text))
+                else:
+                    st.markdown('<div class="warning-message">No se encontró el archivo de codones</div>', 
+                               unsafe_allow_html=True)
+                    return
             else:
                 codon_csv_path = resultados.get('codon_csv_path')
-                df_codones = pd.read_csv(codon_csv_path)
+                if codon_csv_path and Path(codon_csv_path).exists():
+                    df_codones = pd.read_csv(codon_csv_path)
+                else:
+                    st.markdown('<div class="warning-message">No se encontró el archivo de codones</div>', 
+                               unsafe_allow_html=True)
+                    return
             
             st.dataframe(df_codones.head(50), use_container_width=True)
             
@@ -459,65 +546,70 @@ def mostrar_resultados(resultados: Dict):
     
     images = resultados.get('images', [])
     
-    if images and st.session_state.selected_graphs:
-        # Filtrar imágenes según los gráficos seleccionados
-        filtered_images = []
-        for img_path in images:
-            img_name = Path(img_path).stem.lower()
-            for graph_key in st.session_state.selected_graphs:
-                if graph_key in img_name:
-                    filtered_images.append(img_path)
-                    break
-        
-        if filtered_images:
-            # Organizar gráficos en columnas
-            for idx, img_path in enumerate(filtered_images):
-                # Obtener el nombre del gráfico para la descripción
-                img_name = Path(img_path).stem.lower()
-                graph_type = None
+    if not images:
+        st.markdown('<div class="warning-message">No se generaron gráficos en el análisis</div>', 
+                   unsafe_allow_html=True)
+        return
+    
+    if not st.session_state.selected_graphs:
+        st.markdown('<div class="warning-message">No se seleccionaron gráficos para mostrar</div>', 
+                   unsafe_allow_html=True)
+        return
+    
+    # Mostrar gráficos en el orden definido
+    for graph_key in AVAILABLE_GRAPHS.keys():
+        if graph_key in st.session_state.selected_graphs:
+            # Buscar la imagen correspondiente a este tipo de gráfico
+            imagen_path = obtener_imagen_por_tipo(images, graph_key)
+            
+            if imagen_path:
+                # Crear contenedor para el gráfico
+                st.markdown(f'<div class="graph-container">', unsafe_allow_html=True)
                 
-                # Encontrar el tipo de gráfico correspondiente
-                for graph_key in AVAILABLE_GRAPHS.keys():
-                    if graph_key in img_name:
-                        graph_type = graph_key
-                        break
-                
-                # Mostrar gráfico y descripción
-                col1, col2 = st.columns([2, 1])
+                # Dividir en dos columnas
+                col1, col2 = st.columns([1, 1])
                 
                 with col1:
+                    st.markdown(f'<div class="graph-image">', unsafe_allow_html=True)
                     try:
                         if st.session_state.analysis_client.mode == "API":
                             import requests
-                            response = requests.get(img_path)
-                            st.image(response.content, 
-                                   caption=AVAILABLE_GRAPHS.get(graph_type, Path(img_path).name),
-                                   use_container_width=True)
-                        else:
-                            if Path(img_path).exists():
-                                st.image(img_path, 
-                                       caption=AVAILABLE_GRAPHS.get(graph_type, Path(img_path).name),
+                            response = requests.get(imagen_path)
+                            if response.status_code == 200:
+                                st.image(response.content, 
+                                       caption=AVAILABLE_GRAPHS[graph_key]['name'],
                                        use_container_width=True)
+                            else:
+                                st.markdown(f'<div class="error-message">Error al cargar imagen: {response.status_code}</div>', 
+                                           unsafe_allow_html=True)
+                        else:
+                            if Path(imagen_path).exists():
+                                st.image(imagen_path, 
+                                       caption=AVAILABLE_GRAPHS[graph_key]['name'],
+                                       use_container_width=True)
+                            else:
+                                st.markdown(f'<div class="error-message">Archivo de imagen no encontrado: {imagen_path}</div>', 
+                                           unsafe_allow_html=True)
                     except Exception as e:
-                        st.markdown(f'<div class="error-message">Error al cargar imagen {img_path}: {e}</div>', 
+                        st.markdown(f'<div class="error-message">Error al cargar imagen {imagen_path}: {e}</div>', 
                                    unsafe_allow_html=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
                 
                 with col2:
                     # Mostrar descripción del gráfico
-                    if graph_type and graph_type in GRAPH_DESCRIPTIONS:
+                    if graph_key in GRAPH_DESCRIPTIONS:
                         st.markdown(
                             f'<div class="graph-description">'
-                            f'<strong>Descripción:</strong><br>'
-                            f'{GRAPH_DESCRIPTIONS[graph_type]}'
+                            f'<h4>{AVAILABLE_GRAPHS[graph_key]["name"]}</h4>'
+                            f'{GRAPH_DESCRIPTIONS[graph_key]}'
                             f'</div>',
                             unsafe_allow_html=True
                         )
+                    else:
+                        st.markdown(f'<div class="warning-message">Descripción no disponible para {graph_key}</div>', 
+                                   unsafe_allow_html=True)
                 
-                st.markdown("---")
-        else:
-            st.info("No se generaron los gráficos seleccionados")
-    else:
-        st.info("No se generaron gráficos o no se seleccionaron gráficos para mostrar")
+                st.markdown('</div>', unsafe_allow_html=True)
     
     # Botón de descarga ZIP
     st.subheader("Descargar Reporte Completo")
@@ -534,7 +626,7 @@ def mostrar_resultados(resultados: Dict):
             resumen_csv_path = resultados.get('resumen_csv_path')
             codon_csv_path = resultados.get('codon_csv_path')
             
-            if resumen_csv_path and codon_csv_path:
+            if resumen_csv_path and codon_csv_path and Path(resumen_csv_path).exists() and Path(codon_csv_path).exists():
                 resultados_dir = Path(resumen_csv_path).parent
                 zip_path = crear_zip_resultados(str(resultados_dir))
                 
@@ -549,6 +641,9 @@ def mostrar_resultados(resultados: Dict):
                 else:
                     st.markdown('<div class="warning-message">No se pudo crear el archivo ZIP</div>', 
                                unsafe_allow_html=True)
+            else:
+                st.markdown('<div class="warning-message">Archivos de resultados no disponibles para crear ZIP</div>', 
+                           unsafe_allow_html=True)
     except Exception as e:
         st.markdown(f'<div class="error-message">Error al crear ZIP: {e}</div>', 
                    unsafe_allow_html=True)
@@ -750,7 +845,8 @@ def main():
         status = st.session_state.analysis_status
         
         if status == 'SUBMITTED':
-            st.info("Análisis enviado. Esperando procesamiento...")
+            st.markdown('<div class="status-running">Análisis enviado. Esperando procesamiento...</div>', 
+                       unsafe_allow_html=True)
             if st.session_state.analysis_client.mode == "API" and st.session_state.job_id:
                 if st.button("Actualizar estado", key="refresh_status"):
                     status_response = st.session_state.analysis_client.get_status(st.session_state.job_id)
@@ -761,7 +857,8 @@ def main():
                     st.rerun()
         
         elif status == 'RUNNING':
-            st.info("Análisis en progreso...")
+            st.markdown('<div class="status-running">Análisis en progreso...</div>', 
+                       unsafe_allow_html=True)
             progress_bar = st.progress(0.5)
             st.write("Procesando secuencias y generando gráficos...")
             
@@ -775,7 +872,7 @@ def main():
                     st.rerun()
         
         elif status == 'COMPLETED':
-            st.markdown('<div class="success-message">Análisis completado exitosamente</div>', 
+            st.markdown('<div class="status-completed">Análisis completado exitosamente</div>', 
                        unsafe_allow_html=True)
             
             if st.session_state.analysis_client.mode == "API" and st.session_state.job_id:
@@ -794,7 +891,7 @@ def main():
                            unsafe_allow_html=True)
         
         elif status == 'FAILED':
-            st.markdown('<div class="error-message">El análisis falló</div>', 
+            st.markdown('<div class="status-failed">El análisis falló</div>', 
                        unsafe_allow_html=True)
             if st.session_state.error_message:
                 st.markdown(f'<div class="error-message">Error: {st.session_state.error_message}</div>', 
