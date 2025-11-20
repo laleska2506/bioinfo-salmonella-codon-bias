@@ -139,6 +139,13 @@ st.markdown("""
         color: #1f77b4;
         margin-bottom: 0.5rem;
     }
+    .logo-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        margin: 1rem 0;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -255,7 +262,7 @@ GRAPH_DESCRIPTIONS = {
     
     'pca_secuencias': """
     El análisis de Componentes Principales (PCA) reduce la dimensionalidad de los datos para 
-    visualizar patrones en el uso de codones. Los agrupamientos indican similitudes entre 
+    visualizar patrones en el uso de codones. Los agrupamientos indicant similitudes entre 
     secuencias, mientras que la separación sugiere diferencias significativas. La proximidad 
     de puntos representa similitudes en los patrones de uso de codones, permitiendo identificar 
     agrupaciones naturales y valores atípicos en el conjunto de datos.
@@ -416,6 +423,7 @@ def ejecutar_analisis(salmonella_file, gallus_file, params: Dict, selected_graph
         
         # Leer archivos
         with st.spinner("Leyendo archivos FASTA..."):
+            # Usar getvalue() para obtener el contenido como bytes
             salmonella_content = salmonella_file.getvalue()
             gallus_content = gallus_file.getvalue()
         
@@ -430,15 +438,21 @@ def ejecutar_analisis(salmonella_file, gallus_file, params: Dict, selected_graph
                     gallus_content,
                     params
                 )
-                st.session_state.job_id = resultado.get('jobId')
-                st.session_state.analysis_status = 'SUBMITTED'
+                if 'jobId' in resultado:
+                    st.session_state.job_id = resultado.get('jobId')
+                    st.session_state.analysis_status = 'SUBMITTED'
+                else:
+                    st.session_state.analysis_status = 'FAILED'
+                    st.session_state.error_message = "El backend no devolvió un ID de trabajo válido"
+                    return False
             else:
+                # Modo local
                 resultado = st.session_state.analysis_client.start_analysis(
                     salmonella_content,
                     gallus_content,
                     params
                 )
-                st.session_state.analysis_status = resultado.get('status')
+                st.session_state.analysis_status = resultado.get('status', 'COMPLETED')
                 st.session_state.analysis_results = resultado
         
         # Guardar parámetros
@@ -523,26 +537,29 @@ def mostrar_resultados(resultados: Dict):
     with col1:
         st.subheader("Resumen de Métricas")
         try:
+            df_metricas = None
             if st.session_state.analysis_client.mode == "API":
                 import requests
                 resumen_csv_url = resultados.get('resumen_csv_url')
                 if resumen_csv_url:
                     response = requests.get(resumen_csv_url)
-                    df_metricas = pd.read_csv(io.StringIO(response.text))
+                    if response.status_code == 200:
+                        df_metricas = pd.read_csv(io.StringIO(response.text))
+                    else:
+                        st.markdown(f'<div class="warning-message">Error al descargar métricas: HTTP {response.status_code}</div>', 
+                                   unsafe_allow_html=True)
                 else:
-                    st.markdown('<div class="warning-message">No se encontró el archivo de métricas</div>', 
+                    st.markdown('<div class="warning-message">No se proporcionó URL para el archivo de métricas</div>', 
                                unsafe_allow_html=True)
-                    df_metricas = pd.DataFrame()
             else:
                 resumen_csv_path = resultados.get('resumen_csv_path')
                 if resumen_csv_path and Path(resumen_csv_path).exists():
                     df_metricas = pd.read_csv(resumen_csv_path)
                 else:
-                    st.markdown('<div class="warning-message">No se encontró el archivo de métricas</div>', 
+                    st.markdown('<div class="warning-message">No se encontró el archivo de métricas en la ruta especificada</div>', 
                                unsafe_allow_html=True)
-                    df_metricas = pd.DataFrame()
             
-            if not df_metricas.empty:
+            if df_metricas is not None and not df_metricas.empty:
                 st.dataframe(df_metricas, use_container_width=True)
                 csv_metricas = df_metricas.to_csv(index=False)
                 st.download_button(
@@ -558,26 +575,29 @@ def mostrar_resultados(resultados: Dict):
     with col2:
         st.subheader("Uso de Codones")
         try:
+            df_codones = None
             if st.session_state.analysis_client.mode == "API":
                 import requests
                 codon_csv_url = resultados.get('codon_csv_url')
                 if codon_csv_url:
                     response = requests.get(codon_csv_url)
-                    df_codones = pd.read_csv(io.StringIO(response.text))
+                    if response.status_code == 200:
+                        df_codones = pd.read_csv(io.StringIO(response.text))
+                    else:
+                        st.markdown(f'<div class="warning-message">Error al descargar codones: HTTP {response.status_code}</div>', 
+                                   unsafe_allow_html=True)
                 else:
-                    st.markdown('<div class="warning-message">No se encontró el archivo de codones</div>', 
+                    st.markdown('<div class="warning-message">No se proporcionó URL para el archivo de codones</div>', 
                                unsafe_allow_html=True)
-                    df_codones = pd.DataFrame()
             else:
                 codon_csv_path = resultados.get('codon_csv_path')
                 if codon_csv_path and Path(codon_csv_path).exists():
                     df_codones = pd.read_csv(codon_csv_path)
                 else:
-                    st.markdown('<div class="warning-message">No se encontró el archivo de codones</div>', 
+                    st.markdown('<div class="warning-message">No se encontró el archivo de codones en la ruta especificada</div>', 
                                unsafe_allow_html=True)
-                    df_codones = pd.DataFrame()
             
-            if not df_codones.empty:
+            if df_codones is not None and not df_codones.empty:
                 st.dataframe(df_codones, use_container_width=True)
                 csv_codones = df_codones.to_csv(index=False)
                 st.download_button(
@@ -633,17 +653,27 @@ def mostrar_resultados(resultados: Dict):
 def main():
     """Función principal de la aplicación."""
     
-    # Logo
+    # Logo centrado
+    st.markdown('<div class="logo-container">', unsafe_allow_html=True)
     logo_path = Path(__file__).parent / "assets" / "logo.png"
     if logo_path.exists():
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            st.image(str(logo_path), width=200)
+        st.image(str(logo_path), width=200)
+    else:
+        st.markdown('<div style="text-align: center; font-size: 3rem; margin: 1rem 0;">🧬</div>', 
+                   unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Título y subtítulo
     st.markdown('<div class="main-header">SalmoAvianLight</div>', unsafe_allow_html=True)
     st.markdown('<div class="subheader">Comparación de Secuencias: Salmonella vs Gallus</div>', 
                 unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div style="text-align: center; color: #666; margin-bottom: 2rem;">
+    Herramienta de análisis genético para comparar secuencias de Salmonella y Gallus.<br>
+    Sube archivos FASTA, selecciona los gráficos requeridos y ejecuta el análisis.
+    </div>
+    """, unsafe_allow_html=True)
     
     # Indicador de modo
     modo = st.session_state.analysis_client.mode
@@ -661,35 +691,43 @@ def main():
     with col1:
         st.subheader("Salmonella")
         salmonella_file = st.file_uploader(
-            "Archivo FASTA de Salmonella",
+            "Selecciona el archivo FASTA de Salmonella",
             type=['fa', 'fasta'],
-            key="salmonella_uploader"
+            key="salmonella_uploader",
+            help="Archivo FASTA con secuencias de Salmonella"
         )
         if salmonella_file:
             tamaño_mb = salmonella_file.size / (1024 * 1024)
+            st.markdown(f'<div class="file-info">Archivo detectado: {salmonella_file.name} ({tamaño_mb:.2f} MB)</div>', 
+                       unsafe_allow_html=True)
+            
             es_valido, mensaje = validar_archivo_fasta(salmonella_file)
-            if es_valido:
-                st.markdown(f'<div class="success-message">Archivo válido: {salmonella_file.name} ({tamaño_mb:.2f} MB)</div>', 
+            if not es_valido:
+                st.markdown(f'<div class="error-message">Error: {mensaje}</div>', 
                            unsafe_allow_html=True)
             else:
-                st.markdown(f'<div class="error-message">{mensaje}</div>', 
+                st.markdown(f'<div class="success-message">Archivo válido: {salmonella_file.name} ({tamaño_mb:.2f} MB)</div>', 
                            unsafe_allow_html=True)
     
     with col2:
         st.subheader("Gallus")
         gallus_file = st.file_uploader(
-            "Archivo FASTA de Gallus",
+            "Selecciona el archivo FASTA de Gallus",
             type=['fa', 'fasta'],
-            key="gallus_uploader"
+            key="gallus_uploader",
+            help="Archivo FASTA con secuencias de Gallus"
         )
         if gallus_file:
             tamaño_mb = gallus_file.size / (1024 * 1024)
+            st.markdown(f'<div class="file-info">Archivo detectado: {gallus_file.name} ({tamaño_mb:.2f} MB)</div>', 
+                       unsafe_allow_html=True)
+            
             es_valido, mensaje = validar_archivo_fasta(gallus_file)
-            if es_valido:
-                st.markdown(f'<div class="success-message">Archivo válido: {gallus_file.name} ({tamaño_mb:.2f} MB)</div>', 
+            if not es_valido:
+                st.markdown(f'<div class="error-message">Error: {mensaje}</div>', 
                            unsafe_allow_html=True)
             else:
-                st.markdown(f'<div class="error-message">{mensaje}</div>', 
+                st.markdown(f'<div class="success-message">Archivo válido: {gallus_file.name} ({tamaño_mb:.2f} MB)</div>', 
                            unsafe_allow_html=True)
     
     # Sección 2: Selección de gráficos
@@ -702,15 +740,30 @@ def main():
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        limpiar_ns = st.checkbox("Normalizar/limpiar Ns", value=True)
-        min_len = st.number_input("Longitud mínima", min_value=0, value=0)
+        limpiar_ns = st.checkbox(
+            "Normalizar/limpiar Ns",
+            value=True,
+            help="Elimina o normaliza caracteres N en las secuencias"
+        )
     
     with col2:
-        top_codons = st.slider("Top codones", 5, 30, 20)
+        min_len = st.number_input(
+            "Longitud mínima por secuencia",
+            min_value=0,
+            value=0,
+            step=1,
+            help="Filtra secuencias con longitud menor a este valor"
+        )
     
     with col3:
-        # Parámetros adicionales pueden ir aquí
-        pass
+        top_codons = st.slider(
+            "Top codones para gráfico comparativo",
+            min_value=5,
+            max_value=30,
+            value=20,
+            step=1,
+            help="Número de codones a mostrar en el gráfico comparativo"
+        )
     
     params = {
         'limpiar_ns': limpiar_ns,
@@ -718,35 +771,62 @@ def main():
         'top_codons': top_codons
     }
     
+    # Verificar si los parámetros han cambiado
+    params_changed = False
+    if st.session_state.last_used_params is not None:
+        params_changed = st.session_state.last_used_params != params
+    
+    if params_changed and st.session_state.analysis_status == 'COMPLETED':
+        st.markdown('<div class="warning-message">Parámetros modificados: Los resultados mostrados fueron generados con parámetros diferentes. Ejecuta un nuevo análisis para ver los resultados con los parámetros actuales.</div>', 
+                   unsafe_allow_html=True)
+    
     # Sección 4: Ejecutar análisis
     st.markdown('<div class="section-header">Ejecutar Análisis</div>', 
                 unsafe_allow_html=True)
     
-    if st.button("Iniciar Análisis", type="primary", use_container_width=True,
-                disabled=(salmonella_file is None or gallus_file is None)):
-        
+    ejecutar_btn = st.button(
+        "Iniciar Análisis",
+        type="primary",
+        use_container_width=True,
+        disabled=(salmonella_file is None or gallus_file is None)
+    )
+    
+    if ejecutar_btn:
         if salmonella_file and gallus_file:
             salmonella_valido, msg_sal = validar_archivo_fasta(salmonella_file)
             gallus_valido, msg_gall = validar_archivo_fasta(gallus_file)
             
             if not salmonella_valido:
-                st.markdown(f'<div class="error-message">Error en Salmonella: {msg_sal}</div>', 
+                st.markdown(f'<div class="error-message">Error en archivo Salmonella: {msg_sal}</div>', 
                            unsafe_allow_html=True)
             elif not gallus_valido:
-                st.markdown(f'<div class="error-message">Error en Gallus: {msg_gall}</div>', 
+                st.markdown(f'<div class="error-message">Error en archivo Gallus: {msg_gall}</div>', 
                            unsafe_allow_html=True)
             else:
-                # Limpiar estado anterior
+                # Limpiar resultados anteriores
                 st.session_state.analysis_results = None
                 st.session_state.analysis_status = None
                 st.session_state.error_message = None
                 
+                # Limpiar directorio temporal
+                if st.session_state.analysis_client.temp_dir:
+                    try:
+                        if os.path.exists(st.session_state.analysis_client.temp_dir):
+                            shutil.rmtree(st.session_state.analysis_client.temp_dir, ignore_errors=True)
+                    except Exception:
+                        pass
+                
                 # Ejecutar análisis
-                with st.spinner("Iniciando análisis..."):
+                with st.spinner("Ejecutando análisis..."):
                     if ejecutar_analisis(salmonella_file, gallus_file, params, selected_graphs):
+                        st.markdown('<div class="success-message">Análisis iniciado correctamente</div>', 
+                                   unsafe_allow_html=True)
                         st.rerun()
+                    else:
+                        st.markdown(f'<div class="error-message">Error al ejecutar análisis: {st.session_state.error_message}</div>', 
+                                   unsafe_allow_html=True)
     
-    # Sección 5: Estado del análisis
+    # Sección 5: Estado y progreso
     if st.session_state.analysis_status:
         st.markdown('<div class="section-header">Estado del Análisis</div>', 
                     unsafe_allow_html=True)
@@ -754,19 +834,45 @@ def main():
         status = st.session_state.analysis_status
         
         if status == 'SUBMITTED':
-            st.markdown('<div class="status-running">Análisis enviado al servidor...</div>', 
+            st.markdown('<div class="status-running">Análisis enviado. Esperando procesamiento...</div>', 
                        unsafe_allow_html=True)
+            if st.session_state.analysis_client.mode == "API" and st.session_state.job_id:
+                if st.button("Actualizar estado", key="refresh_status"):
+                    try:
+                        status_response = st.session_state.analysis_client.get_status(st.session_state.job_id)
+                        nuevo_status = status_response.get('status')
+                        st.session_state.analysis_status = nuevo_status
+                        if status_response.get('message'):
+                            st.write(status_response.get('message'))
+                        st.rerun()
+                    except Exception as e:
+                        st.markdown(f'<div class="error-message">Error al actualizar estado: {e}</div>', 
+                                   unsafe_allow_html=True)
         
         elif status == 'RUNNING':
             st.markdown('<div class="status-running">Análisis en progreso...</div>', 
                        unsafe_allow_html=True)
-            st.progress(0.7)
+            progress_bar = st.progress(0.5)
+            st.write("Procesando secuencias y generando gráficos...")
+            
+            if st.session_state.analysis_client.mode == "API" and st.session_state.job_id:
+                if st.button("Actualizar estado", key="refresh_running"):
+                    try:
+                        status_response = st.session_state.analysis_client.get_status(st.session_state.job_id)
+                        nuevo_status = status_response.get('status')
+                        st.session_state.analysis_status = nuevo_status
+                        if status_response.get('message'):
+                            st.write(status_response.get('message'))
+                        st.rerun()
+                    except Exception as e:
+                        st.markdown(f'<div class="error-message">Error al actualizar estado: {e}</div>', 
+                                   unsafe_allow_html=True)
         
         elif status == 'COMPLETED':
-            st.markdown('<div class="status-completed">Análisis completado</div>', 
+            st.markdown('<div class="status-completed">Análisis completado exitosamente</div>', 
                        unsafe_allow_html=True)
             
-            # Obtener resultados si es necesario
+            # Obtener resultados si estamos en modo API
             if st.session_state.analysis_client.mode == "API" and st.session_state.job_id:
                 try:
                     resultados = st.session_state.analysis_client.get_results(st.session_state.job_id)
@@ -774,16 +880,41 @@ def main():
                 except Exception as e:
                     st.markdown(f'<div class="error-message">Error al obtener resultados: {e}</div>', 
                                unsafe_allow_html=True)
+                    st.session_state.analysis_results = None
             
             if st.session_state.analysis_results:
                 mostrar_resultados(st.session_state.analysis_results)
+            else:
+                st.markdown('<div class="warning-message">Los resultados no están disponibles aún.</div>', 
+                           unsafe_allow_html=True)
         
         elif status == 'FAILED':
             st.markdown('<div class="status-failed">El análisis falló</div>', 
                        unsafe_allow_html=True)
             if st.session_state.error_message:
-                st.markdown(f'<div class="error-message">{st.session_state.error_message}</div>', 
+                st.markdown(f'<div class="error-message">Error: {st.session_state.error_message}</div>', 
                            unsafe_allow_html=True)
+            
+            if st.session_state.last_params:
+                if st.button("Reintentar análisis"):
+                    st.session_state.analysis_status = None
+                    st.session_state.error_message = None
+                    st.rerun()
+    
+    # Sección 6: Historial
+    if st.session_state.execution_history:
+        with st.expander("Historial de Ejecuciones"):
+            hist_df = pd.DataFrame(st.session_state.execution_history)
+            st.dataframe(hist_df, use_container_width=True)
+    
+    # Footer
+    st.markdown("---")
+    st.markdown("""
+    <div style="text-align: center; color: #888; font-size: 0.9rem;">
+    Herramienta de Análisis Genético - Salmonella vs Gallus<br>
+    Para analistas de laboratorio
+    </div>
+    """, unsafe_allow_html=True)
 
 
 if __name__ == "__main__":
