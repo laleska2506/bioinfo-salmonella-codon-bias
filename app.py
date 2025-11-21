@@ -1,6 +1,6 @@
 """
-Frontend Web para SalmoAvianLight - Versión Corregida
-Orden correcto de gráficos y carga ultra rápida
+Frontend Web para SalmoAvianLight - Versión Final
+Con nuevos gráficos y descripciones específicas
 """
 import streamlit as st
 import pandas as pd
@@ -108,77 +108,77 @@ st.markdown("""
 # CACHE ULTRA RÁPIDO
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_available_charts():
-    """Cache de la lista de gráficos disponibles"""
+    """Cache de la lista de gráficos disponibles con nuevos IDs"""
     return [
         {
-            "id": "histograma_longitud",
-            "name": "Histograma de Longitudes", 
-            "category": "Distribuciones Básicas",
-            "description": "Distribución de frecuencias de longitudes de secuencias",
+            "id": "GF1",
+            "name": "Distribución del Contenido GC (Gallus)", 
+            "category": "Distribuciones de GC",
+            "description": "Distribución del contenido GC en Gallus",
             "fast": True,
             "desc_id": "DESCRIPCION_G1"
         },
         {
-            "id": "distribucion_gc",
-            "name": "Distribución de Contenido GC", 
-            "category": "Distribuciones Básicas",
-            "description": "Distribución del porcentaje de contenido GC en las secuencias",
+            "id": "GF2",
+            "name": "Distribución del Contenido GC (Salmonella)", 
+            "category": "Distribuciones de GC",
+            "description": "Distribución del contenido GC en Salmonella",
             "fast": True,
             "desc_id": "DESCRIPCION_G2"
         },
         {
-            "id": "frecuencia_codones",
-            "name": "Frecuencia de Uso de Codones",
-            "category": "Análisis de Codones", 
-            "description": "Frecuencia relativa de uso de cada codón en las secuencias",
+            "id": "GF3",
+            "name": "Distribución del Contenido GC (Comparativa)",
+            "category": "Distribuciones de GC", 
+            "description": "Comparativa de distribución GC entre especies",
             "fast": True,
             "desc_id": "DESCRIPCION_G3"
         },
         {
-            "id": "comparativa_codones",
-            "name": "Comparativa de Uso de Codones",
-            "category": "Análisis de Codones",
-            "description": "Comparación del uso de codones entre las dos especies", 
+            "id": "GF4",
+            "name": "Distribución Acumulativa de Longitudes de Genes",
+            "category": "Distribuciones de Longitud",
+            "description": "Distribución acumulativa de longitudes génicas", 
             "fast": True,
             "desc_id": "DESCRIPCION_G4"
         },
         {
-            "id": "correlacion_codones", 
-            "name": "Correlación de Uso de Codones",
-            "category": "Análisis de Codones",
-            "description": "Análisis de correlación en el uso de codones entre especies",
-            "fast": False,
+            "id": "GF5", 
+            "name": "Distribución de Longitudes de Secuencias",
+            "category": "Distribuciones de Longitud",
+            "description": "Distribución general de longitudes de secuencias",
+            "fast": True,
             "desc_id": "DESCRIPCION_G5"
         },
         {
-            "id": "boxplot_longitud",
-            "name": "Distribución de Longitudes por Especie", 
-            "category": "Comparativas Estadísticas",
-            "description": "Comparación de distribuciones de longitud mediante diagramas de caja",
+            "id": "GF6",
+            "name": "Top 15 Codones Más Frecuentes", 
+            "category": "Análisis de Codones",
+            "description": "Comparación de codones más frecuentes entre especies",
             "fast": True,
             "desc_id": "DESCRIPCION_G6"
         },
         {
-            "id": "pca",
-            "name": "Análisis de Componentes Principales",
-            "category": "Análisis Multivariado", 
-            "description": "Reducción de dimensionalidad basada en patrones de uso de codones",
+            "id": "GF7",
+            "name": "Correlación del Uso de Codones",
+            "category": "Análisis de Codones", 
+            "description": "Correlación en uso de codones entre especies",
             "fast": False,
             "desc_id": "DESCRIPCION_G7"
         },
         {
-            "id": "heatmap", 
-            "name": "Mapa de Calor de Similitudes",
-            "category": "Análisis Multivariado",
-            "description": "Visualización de similitudes entre secuencias mediante gradientes de color",
+            "id": "GF8", 
+            "name": "Heatmap de Uso de Codones en Salmonella",
+            "category": "Análisis de Codones",
+            "description": "Heatmap de uso de codones específico para Salmonella",
             "fast": False,
             "desc_id": "DESCRIPCION_G8"
         },
         {
-            "id": "scatter_gc_longitud",
-            "name": "Relación GC vs Longitud",
+            "id": "GF9",
+            "name": "Relación entre Longitud y Contenido GC",
             "category": "Análisis de Relaciones", 
-            "description": "Análisis de la relación entre contenido GC y longitud de secuencias",
+            "description": "Relación entre longitud de secuencias y contenido GC",
             "fast": True,
             "desc_id": "DESCRIPCION_G9"
         }
@@ -186,25 +186,25 @@ def get_available_charts():
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_chart_descriptions():
-    """Cache del diccionario de descripciones con las descripciones específicas"""
+    """Cache del diccionario de descripciones con las nuevas descripciones específicas"""
     return {
-        "DESCRIPCION_G1": "El histograma de longitudes muestra la distribución de los valores asociados a la variable de tamaño dentro del conjunto de datos. Cada barra representa la frecuencia con la que aparece un rango específico de longitudes, permitiendo identificar concentraciones, dispersiones y posibles extremos. Este gráfico facilita observar si la distribución es simétrica, sesgada o multimodal. Además, permite comparar visualmente la densidad relativa entre diferentes intervalos. El histograma es útil para comprender la variabilidad general, detectar patrones subyacentes y evaluar si los datos siguen una tendencia particular, lo cual resulta fundamental para análisis posteriores o decisiones basadas en la estructura.",
+        "DESCRIPCION_G1": "La distribución del contenido GC en Gallus permite evaluar la composición nucleotídica general de sus genes y detectar posibles sesgos genómicos característicos de la especie. Al observar la forma de la distribución, se identifican zonas de mayor frecuencia que indican rangos de GC preferidos por el organismo. Este análisis proporciona información relevante sobre estabilidad estructural del ADN, presión evolutiva y posibles implicaciones funcionales en la expresión genética. Además, sirve como referencia inicial para comparar el contenido GC con el de otras especies y explorar relaciones con características estructurales como la longitud de los genes o la organización genómica.",
         
-        "DESCRIPCION_G2": "La distribución del contenido GC presenta cómo se comportan los porcentajes de guanina y citosina a lo largo de todas las secuencias analizadas. A través del gráfico, es posible visualizar la variabilidad, identificar valores centrales y detectar regiones con alto o bajo contenido GC. Esta representación permite evaluar si la distribución es uniforme, sesgada o presenta agrupamientos particulares. Además, ayuda a reconocer patrones globales y diferencias entre elementos dentro del conjunto. Con esta información, se puede inferir estabilidad relativa, complejidad de composición y posibles características estructurales relevantes para estudios comparativos o análisis posteriores sobre composición general.",
+        "DESCRIPCION_G2": "La gráfica muestra cómo se distribuye el contenido GC en las secuencias de Salmonella, permitiendo identificar tendencias composicionales propias del organismo. La forma de la distribución revela si existe un sesgo definido hacia valores altos o bajos de GC, así como la presencia de subpoblaciones con composiciones diferenciadas. Esta información es fundamental para comprender la arquitectura del genoma bacteriano, su estabilidad frente a condiciones ambientales y su potencial eficiencia en procesos celulares. Además, la visualización facilita comparaciones posteriores con Gallus, permitiendo evaluar divergencias evolutivas y analizar cómo la composición GC influye en el uso de codones y características estructurales.",
         
-        "DESCRIPCION_G3": "La visualización de frecuencia de uso de codones muestra cuántas veces aparece cada codón dentro del conjunto de secuencias analizadas. Permite identificar cuáles codones son más comunes y cuáles se utilizan menos, facilitando la detección de posibles sesgos o preferencias en el sistema estudiado. El gráfico ayuda a observar patrones globales y variaciones significativas entre codones individuales. Asimismo, es útil para comparar la distribución general y evaluar si existe uniformidad o concentración en determinados grupos. Esta información resulta valiosa para estudios de optimización, análisis evolutivo o comprensión de características funcionales relacionadas con el uso específico observado.",
+        "DESCRIPCION_G3": "Este gráfico compara directamente la distribución del contenido GC entre Gallus y Salmonella, permitiendo observar diferencias claras o similitudes notorias en su composición genética. La comparación revela patrones evolutivos, preferencias nucleotídicas y posibles adaptaciones asociadas a sus entornos o funciones biológicas. Analizar ambas curvas juntas facilita identificar rangos de GC compartidos, así como zonas donde una especie presenta mayor variabilidad o sesgo composicional. Este análisis comparativo es esencial para conectar la composición genómica con posteriores diferencias en el uso de codones, eficiencia translacional y organización estructural. Además, prepara el terreno para interpretar análisis más avanzados como correlaciones y PCA.",
         
-        "DESCRIPCION_G4": "La gráfica comparativa de uso de codones permite evaluar diferencias en frecuencia entre múltiples grupos, muestras o categorías. Muestra cómo varía la utilización de cada codón en distintos contextos, facilitando la identificación de patrones divergentes o coincidencias significativas. Este tipo de comparación ayuda a determinar si existen preferencias específicas, posibles adaptaciones o sesgos diferenciados. También revela la magnitud de las diferencias, destacando codones que muestran comportamientos similares o contrastantes. Esta visualización es especialmente útil para análisis comparativos, estudios evolutivos o evaluaciones de optimización, proporcionando una perspectiva clara sobre cómo se distribuye el uso en diferentes condiciones.",
+        "DESCRIPCION_G4": "Este gráfico muestra la distribución acumulativa de las longitudes génicas, permitiendo visualizar la proporción de secuencias que se encuentran por debajo de diversos umbrales de longitud. La curva revela si la mayoría de los genes se concentra en rangos cortos, medios o largos, y permite identificar colas extensas que indiquen la presencia de secuencias atípicamente grandes. Esta visión acumulativa facilita comparar estructuras genómicas entre especies y evaluar la variabilidad global del tamaño génico. Además, complementa análisis más detallados de variación estructural y sirve como base para relacionar la longitud con otras métricas, como la composición GC o el uso codonal.",
         
-        "DESCRIPCION_G5": "El gráfico de correlación de uso de codones muestra el grado de asociación entre los patrones de frecuencia de diferentes codones dentro del conjunto analizado. Utiliza una matriz o representación equivalente para visualizar cómo se relaciona cada codón con los demás, indicando si existe una correlación positiva, negativa o nula. Esta herramienta permite identificar grupos de codones que comparten comportamientos similares, así como detectar relaciones inusuales. Además, facilita comprender la estructura interna del uso codón y posibles dependencias. Es especialmente útil para análisis estadísticos, inferencias funcionales y exploración de patrones que no son evidentes individualmente.",
+        "DESCRIPCION_G5": "La gráfica representa la distribución general de las longitudes de las secuencias analizadas, mostrando cuántos genes se encuentran en cada rango de tamaño. La forma de la distribución permite identificar patrones como concentración alrededor de longitudes específicas, presencia de múltiples picos, alta variabilidad o existencia de valores extremos. Esta información es crucial para comprender la arquitectura básica del genoma y reconocer posibles clases funcionales o estructurales asociadas a longitudes particulares. Además, el análisis sirve como referencia para comparaciones entre especies, exploraciones de relaciones con el contenido GC y evaluaciones de posibles efectos sobre la expresión, estabilidad y regulación génica.",
         
-        "DESCRIPCION_G6": "El boxplot de longitudes ofrece una representación clara de la distribución de tamaños dentro del conjunto de datos. Muestra la mediana, los cuartiles y posibles valores atípicos, facilitando la comprensión de la variabilidad y la dispersión. Este gráfico permite identificar simetrías, asimetrías y rangos intercuartílicos, proporcionando una visión rápida del comportamiento central y extremo de las longitudes. Es especialmente útil para comparar múltiples grupos o categorías bajo la misma métrica, permitiendo evaluar diferencias estructurales. Además, ayuda a detectar anomalías importantes y a comprender la estabilidad relativa del conjunto, sirviendo como base para análisis más profundos.",
+        "DESCRIPCION_G6": "Este gráfico compara los quince codones más frecuentes utilizados por cada especie, proporcionando una visión clara de sus preferencias codonales. Observar estas diferencias o coincidencias permite evaluar sesgos en el uso del código genético, asociados tanto a la composición GC como a presiones evolutivas específicas. La presencia de codones dominantes puede indicar optimización para la traducción, eficiencia en la expresión génica o adaptaciones a su maquinaria celular. Comparar Gallus y Salmonella facilita identificar patrones compartidos o divergentes, revelando información relevante para estudios evolutivos, análisis funcionales y comprensión profunda de la biología molecular de ambas especies.",
         
-        "DESCRIPCION_G7": "El gráfico de análisis PCA representa la reducción de dimensionalidad del conjunto de datos, mostrando cómo se agrupan o separan los elementos en un espacio compuesto por componentes principales. Cada punto refleja una combinación lineal de variables originales, optimizada para capturar la mayor variabilidad posible. La visualización facilita identificar patrones, similitudes, separaciones y tendencias globales entre muestras. También permite evaluar qué tanto contribuye cada componente a la variación total, interpretando relaciones subyacentes. Este gráfico es fundamental para explorar estructuras complejas, detectar agrupamientos naturales y comprender la organización interna antes de aplicar análisis más detallados o métodos adicionales.",
+        "DESCRIPCION_G7": "Este gráfico muestra la relación entre los niveles de uso de cada codón en Salmonella y Gallus, permitiendo evaluar si existe correlación significativa entre ambas especies. Una correlación alta indica patrones codonales similares, posiblemente asociados a presiones evolutivas compartidas o funciones conservadas. Una correlación baja revela divergencia marcada en las preferencias codonales, reflejando adaptaciones propias de cada organismo. La posición de los puntos evidencia codones sobreutilizados o subutilizados en comparación entre especies. Este análisis es fundamental para comprender diferencias funcionales, eficiencia translacional y variaciones genómicas, además de servir como puente entre análisis individuales y representaciones multivariadas como el PCA.",
         
-        "DESCRIPCION_G8": "El heatmap de similitudes muestra visualmente el grado de semejanza entre pares de elementos del conjunto de datos mediante una escala de colores. Cada celda representa la similitud relativa entre dos entidades, permitiendo identificar patrones agrupados, bloques cohesivos o regiones contrastantes. Este tipo de visualización facilita detectar clústeres naturales, relaciones inesperadas o comportamientos divergentes. Además, ayuda a comprender la estructura global del conjunto y a evaluar qué tan homogéneas o diversas son las muestras. Es una herramienta valiosa para análisis comparativos, clasificación, detección de patrones y exploraciones iniciales en conjuntos complejos o de alta dimensionalidad.",
+        "DESCRIPCION_G8": "El heatmap presenta la intensidad del uso de codones en Salmonella, visualizada mediante una escala de colores que destaca frecuencias altas, medias y bajas. Esta representación facilita identificar codones preferidos, subutilizados y patrones grupales que pueden reflejar tanto la composición GC como presiones evolutivas específicas. La organización del mapa permite detectar regiones coherentes de uso codonal, evidenciando sesgos característicos de la especie. Este tipo de análisis es muy útil para comprender la eficiencia de traducción, la organización funcional del genoma y la relación entre codones y expresión génica. Además, prepara la base para estudios comparativos y análisis PCA.",
         
-        "DESCRIPCION_G9": "El gráfico de dispersión GC vs longitud muestra la relación entre el contenido GC y la longitud de cada secuencia analizada. Cada punto representa una secuencia, permitiendo observar si existe una tendencia, correlación o patrón claro entre ambas variables. El gráfico ayuda a identificar agrupamientos, dispersiones y posibles outliers que puedan indicar comportamientos inusuales. Además, permite visualizar si el contenido GC se mantiene estable, aumenta o disminuye según la longitud. Esta representación es útil para explorar dependencias y evaluar si las variaciones en composición tienen conexión con el tamaño de las secuencias dentro del conjunto estudiado."
+        "DESCRIPCION_G9": "Este gráfico examina la relación entre la longitud de las secuencias y su contenido GC, permitiendo evaluar si existe correlación entre estas dos características fundamentales. La dispersión de los puntos muestra patrones que indican si los genes más largos tenden a tener mayor GC o si no existe relación clara. Identificar tendencias ayuda a comprender cómo se estructuran los genes y qué factores influyen en su composición. El análisis también sirve para integrar información obtenida previamente en las distribuciones individuales de longitud y GC, proporcionando una visión más completa del comportamiento genómico y posibilitando interpretaciones evolutivas, funcionales y estructurales."
     }
 
 # Inicialización del session state optimizada
@@ -275,21 +275,21 @@ def leer_archivo_rapido(file):
 
 def mostrar_seleccion_graficos_rapida():
     """Selección rápida de gráficos con datos cacheados"""
-    st.markdown('<div class="section-header">Selección Rápida de Gráficos</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Selección de Gráficos para Análisis</div>', unsafe_allow_html=True)
     
     # Obtener datos cacheados
     available_charts = get_available_charts()
     
     # Modo turbo para máxima velocidad
     modo_turbo = st.checkbox(
-        "🚀 Modo Turbo (Gráficos Rápidos)", 
+        "Modo Turbo (Gráficos Rápidos)", 
         value=True,
         help="Selecciona automáticamente solo los gráficos de procesamiento más rápido"
     )
     
     if modo_turbo:
         st.session_state.selected_charts = [chart["id"] for chart in available_charts if chart["fast"]]
-        st.success("✅ Modo Turbo activado: Procesamiento máximo velocidad")
+        st.success("Modo Turbo activado: Procesamiento máximo velocidad")
         return
     
     # Selección manual optimizada
@@ -342,7 +342,7 @@ def ejecutar_analisis_turbo(salmonella_file, gallus_file, params: Dict):
         st.write(f"- Gráficos seleccionados: {num_charts}")
         
         # Procesamiento ultra rápido
-        with st.spinner("🚀 Procesamiento turbo en curso..."):
+        with st.spinner("Procesamiento turbo en curso..."):
             salmonella_content, gallus_content = procesamiento_ultra_rapido(
                 salmonella_file, gallus_file
             )
@@ -389,12 +389,12 @@ def ejecutar_analisis_turbo(salmonella_file, gallus_file, params: Dict):
         processing_time = time.time() - st.session_state.processing_start_time if st.session_state.processing_start_time else 0
         st.session_state.error_message = f"Error en {processing_time:.1f}s: {str(e)}"
         st.session_state.analysis_status = 'FAILED'
-        st.error(f"❌ Error: {str(e)}")
+        st.error(f"Error: {str(e)}")
         return False
 
 def mostrar_graficos_rapidos_con_descripciones(images: List):
     """Muestra gráficos en el ORDEN CORRECTO de selección del usuario"""
-    st.markdown('<div class="section-header">📊 Resultados Gráficos Generados</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Resultados Gráficos Generados</div>', unsafe_allow_html=True)
     
     if not images:
         st.info("No se generaron gráficos con la configuración actual")
@@ -405,7 +405,6 @@ def mostrar_graficos_rapidos_con_descripciones(images: List):
     chart_descriptions = get_chart_descriptions()
     
     # CORRECCIÓN: Crear mapeo directo entre gráficos seleccionados e imágenes
-    # Asumimos que el backend devuelve las imágenes en el mismo orden que los gráficos seleccionados
     chart_image_pairs = []
     
     for i, chart_id in enumerate(st.session_state.selected_charts):
@@ -447,13 +446,13 @@ def mostrar_graficos_rapidos_con_descripciones(images: List):
 
 def mostrar_resultados_turbo(resultados: Dict):
     """Muestra resultados en modo turbo"""
-    st.markdown('<div class="section-header">📈 Resultados del Análisis</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Resultados del Análisis</div>', unsafe_allow_html=True)
     
     # Métricas rápidas
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("📋 Resumen de Métricas")
+        st.subheader("Resumen de Métricas")
         try:
             if st.session_state.analysis_client.mode == "API":
                 import requests
@@ -467,7 +466,7 @@ def mostrar_resultados_turbo(resultados: Dict):
             
             csv_metricas = df_metricas.to_csv(index=False)
             st.download_button(
-                label="📥 Descargar Métricas",
+                label="Descargar Métricas",
                 data=csv_metricas,
                 file_name="metricas.csv",
                 mime="text/csv"
@@ -476,7 +475,7 @@ def mostrar_resultados_turbo(resultados: Dict):
             st.error(f"Error cargando métricas: {e}")
     
     with col2:
-        st.subheader("🧬 Uso de Codones")
+        st.subheader("Uso de Codones")
         try:
             if st.session_state.analysis_client.mode == "API":
                 import requests
@@ -490,7 +489,7 @@ def mostrar_resultados_turbo(resultados: Dict):
             
             csv_codones = df_codones.to_csv(index=False)
             st.download_button(
-                label="📥 Descargar Codones",
+                label="Descargar Codones",
                 data=csv_codones,
                 file_name="codones.csv",
                 mime="text/csv"
@@ -527,20 +526,20 @@ def main():
             with col2:
                 st.image(str(logo_path), width=150)
     
-    st.markdown('<div class="main-header">SalmoAvianLight Turbo</div>', unsafe_allow_html=True)
-    st.markdown('<div class="subheader">Análisis Ultra Rápido de Secuencias Genéticas</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-header">SalmoAvianLight</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subheader">Análisis Comparativo de Secuencias Genéticas</div>', unsafe_allow_html=True)
     
     # Indicadores de velocidad
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.info("⚡ Procesamiento Turbo")
+        st.info("Procesamiento Turbo")
     with col2:
-        st.info("🚀 Resultados Inmediatos")
+        st.info("Resultados Inmediatos")
     with col3:
-        st.info("💾 Optimizado con Cache")
+        st.info("Optimizado con Cache")
     
     # Sección 1: Carga ultrarrápida
-    st.markdown('<div class="section-header">📁 Carga Rápida de Archivos FASTA</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Carga de Archivos FASTA</div>', unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     
@@ -555,9 +554,9 @@ def main():
             es_valido, mensaje = validar_archivo_fasta_rapido(salmonella_file)
             if es_valido:
                 tamaño_mb = salmonella_file.size / (1024 * 1024)
-                st.success(f"✅ {salmonella_file.name} ({tamaño_mb:.1f}MB)")
+                st.success(f"Archivo válido: {salmonella_file.name} ({tamaño_mb:.1f}MB)")
             else:
-                st.error(f"❌ {mensaje}")
+                st.error(f"Error: {mensaje}")
     
     with col2:
         st.subheader("Gallus")
@@ -570,12 +569,12 @@ def main():
             es_valido, mensaje = validar_archivo_fasta_rapido(gallus_file)
             if es_valido:
                 tamaño_mb = gallus_file.size / (1024 * 1024)
-                st.success(f"✅ {gallus_file.name} ({tamaño_mb:.1f}MB)")
+                st.success(f"Archivo válido: {gallus_file.name} ({tamaño_mb:.1f}MB)")
             else:
-                st.error(f"❌ {mensaje}")
+                st.error(f"Error: {mensaje}")
     
     # Sección 2: Configuración turbo
-    st.markdown('<div class="section-header">⚙️ Configuración Rápida</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Configuración de Análisis</div>', unsafe_allow_html=True)
     
     mostrar_seleccion_graficos_rapida()
     
@@ -591,10 +590,10 @@ def main():
     params = {'min_len': min_len, 'limpiar_ns': limpiar_ns, 'top_codons': top_codons}
     
     # Sección 3: Ejecución turbo
-    st.markdown('<div class="section-header">🚀 Ejecución Turbo</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Ejecución del Análisis</div>', unsafe_allow_html=True)
     
     ejecutar_btn = st.button(
-        "EJECUTAR ANÁLISIS TURBO", 
+        "EJECUTAR ANÁLISIS", 
         type="primary",
         use_container_width=True,
         disabled=not (salmonella_file and gallus_file)
@@ -608,26 +607,26 @@ def main():
             st.session_state.error_message = None
             
             # Ejecución turbo
-            with st.spinner("🚀 Iniciando análisis turbo..."):
+            with st.spinner("Iniciando análisis..."):
                 if ejecutar_analisis_turbo(salmonella_file, gallus_file, params):
-                    st.success("✅ Análisis iniciado correctamente")
+                    st.success("Análisis iniciado correctamente")
                     st.rerun()
                 else:
-                    st.error(f"❌ Error al ejecutar análisis: {st.session_state.error_message}")
+                    st.error(f"Error al ejecutar análisis: {st.session_state.error_message}")
     
     # Sección 4: Resultados rápidos
     if st.session_state.analysis_status:
-        st.markdown('<div class="section-header">📊 Progreso del Análisis</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">Progreso del Análisis</div>', unsafe_allow_html=True)
         
         status = st.session_state.analysis_status
         
         if status == 'SUBMITTED':
-            st.info("⏳ Análisis en cola de procesamiento...")
+            st.info("Análisis en cola de procesamiento...")
         elif status == 'RUNNING':
-            st.info("🔄 Procesamiento en curso...")
+            st.info("Procesamiento en curso...")
             st.progress(0.7)
         elif status == 'COMPLETED':
-            st.success("✅ Análisis completado exitosamente!")
+            st.success("Análisis completado exitosamente!")
             
             if st.session_state.analysis_client.mode == "API" and st.session_state.job_id:
                 try:
@@ -642,7 +641,7 @@ def main():
                 st.warning("Los resultados no están disponibles aún.")
         
         elif status == 'FAILED':
-            st.error("❌ Error en el análisis")
+            st.error("Error en el análisis")
             if st.session_state.error_message:
                 st.error(st.session_state.error_message)
 
