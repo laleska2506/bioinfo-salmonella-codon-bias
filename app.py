@@ -1,6 +1,6 @@
 """
 Frontend Web para SalmoAvianLight - Versión Ordenada y Corregida
-Conexión exacta entre gráficos y descripciones
+Conexión exacta entre gráficos y descripciones - ORDEN ESPECÍFICO: GF1, GF8, GF2, GF7, GF3, GF6, GF4, GF5, GF9
 """
 import streamlit as st
 import pandas as pd
@@ -118,7 +118,7 @@ st.markdown("""
 # CACHE ULTRA RÁPIDO
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_available_charts():
-    """Cache de la lista de gráficos disponibles en orden correcto"""
+    """Cache de la lista de gráficos disponibles en ORDEN ESPECÍFICO: GF1, GF8, GF2, GF7, GF3, GF6, GF4, GF5, GF9"""
     return [
         {
             "id": "GF1",
@@ -129,6 +129,14 @@ def get_available_charts():
             "desc_id": "DESCRIPCION_G1"
         },
         {
+            "id": "GF8", 
+            "name": "GF8 - Heatmap de Uso de Codones en Salmonella",
+            "category": "Análisis de Codones",
+            "description": "Heatmap de uso de codones específico para Salmonella",
+            "fast": False,
+            "desc_id": "DESCRIPCION_G8"
+        },
+        {
             "id": "GF2",
             "name": "GF2 - Distribución del Contenido GC (Salmonella)", 
             "category": "Distribuciones de GC",
@@ -137,12 +145,28 @@ def get_available_charts():
             "desc_id": "DESCRIPCION_G2"
         },
         {
+            "id": "GF7",
+            "name": "GF7 - Correlación del Uso de Codones entre Salmonella y Gallus",
+            "category": "Análisis de Codones", 
+            "description": "Correlación en uso de codones entre especies",
+            "fast": False,
+            "desc_id": "DESCRIPCION_G7"
+        },
+        {
             "id": "GF3",
             "name": "GF3 - Distribución del Contenido GC (Comparativa)",
             "category": "Distribuciones de GC", 
             "description": "Comparativa de distribución GC entre especies",
             "fast": True,
             "desc_id": "DESCRIPCION_G3"
+        },
+        {
+            "id": "GF6",
+            "name": "GF6 - Top 15 Codones Más Frecuentes (Comparación entre Especies)", 
+            "category": "Análisis de Codones",
+            "description": "Comparación de codones más frecuentes entre especies",
+            "fast": True,
+            "desc_id": "DESCRIPCION_G6"
         },
         {
             "id": "GF4",
@@ -159,30 +183,6 @@ def get_available_charts():
             "description": "Distribución general de longitudes de secuencias",
             "fast": True,
             "desc_id": "DESCRIPCION_G5"
-        },
-        {
-            "id": "GF6",
-            "name": "GF6 - Top 15 Codones Más Frecuentes (Comparación entre Especies)", 
-            "category": "Análisis de Codones",
-            "description": "Comparación de codones más frecuentes entre especies",
-            "fast": True,
-            "desc_id": "DESCRIPCION_G6"
-        },
-        {
-            "id": "GF7",
-            "name": "GF7 - Correlación del Uso de Codones entre Salmonella y Gallus",
-            "category": "Análisis de Codones", 
-            "description": "Correlación en uso de codones entre especies",
-            "fast": False,
-            "desc_id": "DESCRIPCION_G7"
-        },
-        {
-            "id": "GF8", 
-            "name": "GF8 - Heatmap de Uso de Codones en Salmonella",
-            "category": "Análisis de Codones",
-            "description": "Heatmap de uso de codones específico para Salmonella",
-            "fast": False,
-            "desc_id": "DESCRIPCION_G8"
         },
         {
             "id": "GF9",
@@ -297,27 +297,27 @@ def leer_archivo_ultra_rapido(file):
     return file.getvalue()
 
 def mostrar_seleccion_graficos_ordenada():
-    """Selección ordenada de gráficos manteniendo el orden GF1-GF9"""
+    """Selección ordenada de gráficos manteniendo el orden específico: GF1, GF8, GF2, GF7, GF3, GF6, GF4, GF5, GF9"""
     st.markdown('<div class="section-header">Selección de Gráficos para Análisis</div>', unsafe_allow_html=True)
     
-    # Obtener datos cacheados
+    # Obtener datos cacheados en el orden específico
     available_charts = get_available_charts()
     
-    # Selección manual manteniendo el orden GF1-GF9
+    # Selección manual manteniendo el orden específico
     st.markdown("**Selecciona los gráficos que deseas generar:**")
     
-    # Organizar por categorías manteniendo orden
+    # Organizar por categorías manteniendo orden específico
     categorias = {}
     for chart in available_charts:
         if chart["category"] not in categorias:
             categorias[chart["category"]] = []
         categorias[chart["category"]].append(chart)
     
-    # Mostrar en orden GF1-GF9 por categorías
+    # Mostrar en orden específico por categorías
     for categoria, charts in categorias.items():
         st.markdown(f'<div class="category-header">{categoria}</div>', unsafe_allow_html=True)
         
-        # Mostrar checkboxes en filas de 3 manteniendo orden
+        # Mostrar checkboxes en filas de 3 manteniendo orden específico
         cols = st.columns(3)
         for idx, chart in enumerate(charts):
             with cols[idx % 3]:
@@ -334,7 +334,7 @@ def mostrar_seleccion_graficos_ordenada():
                     st.session_state.selected_charts.remove(chart["id"])
 
 def ejecutar_analisis_ordenado(salmonella_file, gallus_file, params: Dict):
-    """Ejecuta análisis manteniendo orden correcto"""
+    """Ejecuta análisis manteniendo orden específico"""
     try:
         st.session_state.processing_start_time = time.time()
         
@@ -413,7 +413,7 @@ def ejecutar_analisis_ordenado(salmonella_file, gallus_file, params: Dict):
         return False
 
 def mostrar_graficos_conexion_exacta(images: List):
-    """Muestra gráficos con conexión EXACTA entre gráfico y descripción"""
+    """Muestra gráficos con conexión EXACTA entre gráfico y descripción manteniendo orden específico"""
     st.markdown('<div class="section-header">Resultados Gráficos Generados</div>', unsafe_allow_html=True)
     
     if not images:
@@ -427,14 +427,17 @@ def mostrar_graficos_conexion_exacta(images: List):
     # CONEXIÓN EXACTA: Mapear cada gráfico seleccionado con su imagen y descripción
     chart_image_pairs = []
     
-    for i, chart_id in enumerate(st.session_state.selected_charts):
-        if i < len(images):
-            # Buscar la información exacta del gráfico
-            chart_info = next((c for c in available_charts if c["id"] == chart_id), None)
-            if chart_info:
-                chart_image_pairs.append((chart_info, images[i]))
+    # Primero crear pares manteniendo el ORDEN ESPECÍFICO de selected_charts
+    for chart_id in st.session_state.selected_charts:
+        # Buscar la información exacta del gráfico
+        chart_info = next((c for c in available_charts if c["id"] == chart_id), None)
+        if chart_info:
+            # Buscar la imagen correspondiente (por índice)
+            chart_index_in_selected = st.session_state.selected_charts.index(chart_id)
+            if chart_index_in_selected < len(images):
+                chart_image_pairs.append((chart_info, images[chart_index_in_selected]))
     
-    # Mostrar en ORDEN CORRECTO manteniendo la conexión exacta
+    # Mostrar en ORDEN ESPECÍFICO manteniendo la conexión exacta
     for chart_info, image_path in chart_image_pairs:
         with st.container():
             st.markdown(f'<div class="chart-container">', unsafe_allow_html=True)
@@ -464,7 +467,7 @@ def mostrar_graficos_conexion_exacta(images: List):
             st.markdown('</div>', unsafe_allow_html=True)
 
 def mostrar_resultados_ordenados(resultados: Dict):
-    """Muestra resultados manteniendo orden y conexiones exactas"""
+    """Muestra resultados manteniendo orden específico y conexiones exactas"""
     st.markdown('<div class="section-header">Resultados del Análisis</div>', unsafe_allow_html=True)
     
     # Métricas rápidas
@@ -518,7 +521,7 @@ def mostrar_resultados_ordenados(resultados: Dict):
         except Exception as e:
             st.error(f"Error cargando datos de codones: {e}")
     
-    # Gráficos con conexión exacta
+    # Gráficos con conexión exacta en orden específico
     images = resultados.get('images', [])
     mostrar_graficos_conexion_exacta(images)
 
@@ -571,7 +574,7 @@ def validar_y_cargar_archivos_rapido():
     return salmonella_file, gallus_file
 
 def main():
-    """Aplicación principal ordenada y corregida"""
+    """Aplicación principal ordenada específicamente: GF1, GF8, GF2, GF7, GF3, GF6, GF4, GF5, GF9"""
     init_session_state()
     
     # Header
