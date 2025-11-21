@@ -1,6 +1,6 @@
 """
 Frontend Web para SalmoAvianLight - Versión Corregida
-Descripciones precisas para cada gráfico generado
+9 gráficos con descripciones específicas y ordenadas
 """
 import streamlit as st
 import pandas as pd
@@ -128,7 +128,7 @@ if 'last_used_params' not in st.session_state:
 if 'selected_charts' not in st.session_state:
     st.session_state.selected_charts = []
 
-# Configuración de gráficos disponibles con descripciones técnicas CORREGIDAS
+# Configuración de los 9 gráficos disponibles con descripciones específicas
 AVAILABLE_CHARTS = [
     {
         "id": "histograma_longitud",
@@ -171,10 +171,31 @@ AVAILABLE_CHARTS = [
         "category": "Comparativas Estadísticas",
         "description": "Comparación de distribuciones de longitud mediante diagramas de caja",
         "technical_description": "Este diagrama de cajas compara las distribuciones de longitud de secuencias entre Salmonella y Gallus. Cada caja muestra la mediana (línea central), los cuartiles 25% y 75% (extremos de la caja), y el rango de valores normales (bigotes). Cajas que se superponen indican similitud en las distribuciones de longitud, mientras cajas separadas sugieren diferencias significativas. Valores atípicos individuales representan secuencias con longitudes excepcionales."
+    },
+    {
+        "id": "pca",
+        "name": "Análisis de Componentes Principales",
+        "category": "Análisis Multivariado", 
+        "description": "Reducción de dimensionalidad basada en patrones de uso de codones",
+        "technical_description": "Este gráfico de análisis de componentes principales (PCA) reduce la dimensionalidad de los datos de uso de codones a dos dimensiones para visualización. Cada punto representa una secuencia, y su posición está determinada por su perfil global de uso de codones. Agrupamientos de puntos indican similitudes en patrones de uso, sugiriendo relación evolutiva o funcional. La proximidad entre puntos de diferentes especies puede indicar transferencia horizontal de genes o convergencia evolutiva."
+    },
+    {
+        "id": "heatmap",
+        "name": "Mapa de Calor de Similitudes",
+        "category": "Análisis Multivariado",
+        "description": "Visualización de similitudes entre secuencias mediante gradientes de color",
+        "technical_description": "Este mapa de calor representa las similitudes entre secuencias mediante una matriz de colores. Cada celda muestra el grado de similitud entre dos secuencias, con tonos cálidos indicando alta similitud y tonos fríos baja similitud. Patrones de bloques a lo largo de la diagonal principal sugieren agrupamientos naturales de secuencias con características similares. La estructura del heatmap puede revelar relaciones filogenéticas o agrupamientos funcionales."
+    },
+    {
+        "id": "scatter_gc_longitud",
+        "name": "Relación GC vs Longitud",
+        "category": "Análisis de Relaciones", 
+        "description": "Análisis de la relación entre contenido GC y longitud de secuencias",
+        "technical_description": "Este gráfico de dispersión explora la posible relación entre el contenido de guanina-citosina y la longitud de las secuencias. Cada punto representa una secuencia individual, con coordenadas que reflejan su porcentaje GC y su longitud total. Una tendencia creciente sugiere correlación positiva, donde secuencias más largas tienden a tener mayor contenido GC, mientras una tendencia decreciente indica correlación negativa. La ausencia de patrón visible sugiere independencia entre estas variables."
     }
 ]
 
-# Diccionario rápido de descripciones CORREGIDO
+# Diccionario rápido de descripciones
 CHART_DESCRIPTIONS = {chart["id"]: chart["technical_description"] for chart in AVAILABLE_CHARTS}
 
 def validar_archivo_fasta(archivo) -> Tuple[bool, Optional[str]]:
@@ -333,7 +354,7 @@ def ejecutar_analisis_optimizado(salmonella_file, gallus_file, params: Dict):
         return False
 
 def mostrar_graficos_con_descripciones(images: List):
-    """Muestra los gráficos con sus descripciones técnicas CORREGIDAS."""
+    """Muestra los gráficos con sus descripciones técnicas en orden correcto."""
     st.markdown('<div class="section-header">Resultados Gráficos</div>', unsafe_allow_html=True)
     
     if not images:
@@ -341,14 +362,18 @@ def mostrar_graficos_con_descripciones(images: List):
         return
     
     # Crear mapeo CORRECTO entre imágenes y gráficos seleccionados
+    # Mantener el orden de selección del usuario
     chart_image_mapping = {}
-    for i, chart_id in enumerate(st.session_state.selected_charts):
+    selected_charts_ordered = [chart_id for chart_id in st.session_state.selected_charts 
+                              if chart_id in [c["id"] for c in AVAILABLE_CHARTS]]
+    
+    for i, chart_id in enumerate(selected_charts_ordered):
         if i < len(images):
             chart_image_mapping[chart_id] = images[i]
     
     # Organizar por categorías para mejor presentación
     categorias = {}
-    for chart_id in st.session_state.selected_charts:
+    for chart_id in selected_charts_ordered:
         if chart_id not in chart_image_mapping:
             continue
             
@@ -443,7 +468,7 @@ def mostrar_resultados_completos(resultados: Dict):
         except Exception as e:
             st.error(f"Error al cargar datos de codones: {e}")
     
-    # Gráficos con descripciones CORREGIDAS
+    # Gráficos con descripciones en orden correcto
     images = resultados.get('images', [])
     mostrar_graficos_con_descripciones(images)
     
