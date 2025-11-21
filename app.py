@@ -483,7 +483,7 @@ def interfaz_carga_archivos():
             es_valido, mensaje = validar_archivo_fasta(salmonella_file)
             if es_valido:
                 tamaño_mb = salmonella_file.size / (1024 * 1024)
-                st.markdown(f'<p class="upload-success">✓ Válido: {salmonella_file.name} ({tamaño_mb:.1f}MB)</p>', unsafe_allow_html=True)
+                st.markdown(f'<p class="upload-success"> Válido: {salmonella_file.name} ({tamaño_mb:.1f}MB)</p>', unsafe_allow_html=True)
             else:
                 st.error(f" {mensaje}")
         st.markdown('</div>', unsafe_allow_html=True)
