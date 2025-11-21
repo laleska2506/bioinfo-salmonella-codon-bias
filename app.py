@@ -1,6 +1,5 @@
 """
-Frontend Web para SalmoAvianLight - Versión Sin Prefijos GF
-Coincidencia exacta con los gráficos generados por visualizacion.py
+Frontend Web para SalmoAvianLight 
 """
 import streamlit as st
 import pandas as pd
@@ -24,7 +23,6 @@ from utils.zipper import crear_zip_resultados
 # Configuración de la página
 st.set_page_config(
     page_title="SalmoAvianLight",
-    page_icon="🧬",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -92,7 +90,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# MAESTRO DE GRÁFICOS - COINCIDENCIA EXACTA CON visualizacion.py (sin prefijos GF en frontend)
+# MAESTRO DE GRÁFICOS - COINCIDENCIA EXACTA CON visualizacion.py 
 CHART_MASTER = {
     "distribucion_longitudes": {
         "id": "GF5",
@@ -177,23 +175,23 @@ def get_available_charts():
 def get_chart_descriptions():
     """Descripciones que coinciden con los gráficos reales generados"""
     return {
-        "DESC_GF1": "**Distribución del Contenido GC en Gallus** - Muestra la frecuencia de los valores de contenido GC específicamente en las secuencias de Gallus. Permite identificar patrones composicionales característicos de la especie aviar, mostrando si existe un rango preferido de contenido GC y la variabilidad composicional del genoma.",
+        "DESC_GF1": "Distribución del Contenido GC en Gallus - Muestra la frecuencia de los valores de contenido GC específicamente en las secuencias de Gallus. Permite identificar patrones composicionales característicos de la especie aviar, mostrando si existe un rango preferido de contenido GC y la variabilidad composicional del genoma.",
         
-        "DESC_GF2": "**Distribución del Contenido GC en Salmonella** - Analiza la composición nucleotídica específica de las secuencias de Salmonella. Revela sesgos genómicos característicos de bacterias y permite identificar la distribución particular del contenido GC en este organismo, mostrando posibles adaptaciones evolutivas en su composición genética.",
+        "DESC_GF2": "Distribución del Contenido GC en Salmonella - Analiza la composición nucleotídica específica de las secuencias de Salmonella. Revela sesgos genómicos característicos de bacterias y permite identificar la distribución particular del contenido GC en este organismo, mostrando posibles adaptaciones evolutivas en su composición genética.",
         
-        "DESC_GF3": "**Distribución General del Contenido GC** - Histograma que muestra la distribución global del contenido GC combinando ambas especies. Proporciona una visión general de la composición nucleotídica del conjunto de datos completo, identificando modas y rangos predominantes de contenido GC sin distinción de especie.",
+        "DESC_GF3": "Distribución General del Contenido GC - Histograma que muestra la distribución global del contenido GC combinando ambas especies. Proporciona una visión general de la composición nucleotídica del conjunto de datos completo, identificando modas y rangos predominantes de contenido GC sin distinción de especie.",
         
-        "DESC_GF4": "**Distribución Acumulativa de Longitudes de Genes** - Gráfico de distribución acumulativa que muestra la proporción de genes por debajo de cierta longitud. Incluye marcadores de percentiles (25%, 50%, 75%, 90%) que permiten identificar valores de referencia para el tamaño génico en el conjunto de datos analizado.",
+        "DESC_GF4": "Distribución Acumulativa de Longitudes de Genes - Gráfico de distribución acumulativa que muestra la proporción de genes por debajo de cierta longitud. Incluye marcadores de percentiles (25%, 50%, 75%, 90%) que permiten identificar valores de referencia para el tamaño génico en el conjunto de datos analizado.",
         
-        "DESC_GF5": "**Distribución de Longitudes de Secuencias** - Histograma detallado de la distribución de longitudes de todas las secuencias analizadas. Muestra la frecuencia de diferentes tamaños de genes, permitiendo identificar si existen picos específicos, distribución normal o sesgos en el tamaño de las secuencias génicas.",
+        "DESC_GF5": "Distribución de Longitudes de Secuencias - Histograma detallado de la distribución de longitudes de todas las secuencias analizadas. Muestra la frecuencia de diferentes tamaños de genes, permitiendo identificar si existen picos específicos, distribución normal o sesgos en el tamaño de las secuencias génicas.",
         
-        "DESC_GF6": "**Top 20 Codones Más Frecuentes** - Gráfico de barras comparativo que muestra los 20 codones con mayor frecuencia de uso en ambas especies. Permite identificar visualmente las preferencias codonales de cada organismo y comparar directamente cuáles codones son más utilizados en Salmonella versus Gallus.",
+        "DESC_GF6": "Top 20 Codones Más Frecuentes - Gráfico de barras comparativo que muestra los 20 codones con mayor frecuencia de uso en ambas especies. Permite identificar visualmente las preferencias codonales de cada organismo y comparar directamente cuáles codones son más utilizados en Salmonella versus Gallus.",
         
-        "DESC_GF7": "**Correlación del Uso de Codones** - Gráfico de dispersión que compara la frecuencia de uso de cada codón entre Salmonella y Gallus. La línea diagonal representa la correlación perfecta. Permite evaluar si existen patrones de uso similares o divergentes entre las especies a nivel de cada codón específico.",
+        "DESC_GF7": "Correlación del Uso de Codones - Gráfico de dispersión que compara la frecuencia de uso de cada codón entre Salmonella y Gallus. La línea diagonal representa la correlación perfecta. Permite evaluar si existen patrones de uso similares o divergentes entre las especies a nivel de cada codón específico.",
         
-        "DESC_GF8": "**Heatmap de Uso de Codones en Salmonella** - Representación matricial del uso de codones organizado por familias. El mapa de calor utiliza colores para indicar la intensidad de uso de cada codón, permitiendo identificar patrones grupales y preferencias en la utilización del código genético en Salmonella.",
+        "DESC_GF8": "Heatmap de Uso de Codones en Salmonella - Representación matricial del uso de codones organizado por familias. El mapa de calor utiliza colores para indicar la intensidad de uso de cada codón, permitiendo identificar patrones grupales y preferencias en la utilización del código genético en Salmonella.",
         
-        "DESC_GF9": "**Relación entre Longitud y Contenido GC** - Diagrama de dispersión que explora la posible correlación entre el tamaño de las secuencias y su composición GC. Utiliza densidad de color para mostrar concentraciones de puntos, revelando si genes más largos tienden a tener composiciones GC específicas o si no existe relación aparente."
+        "DESC_GF9": "Relación entre Longitud y Contenido GC - Diagrama de dispersión que explora la posible correlación entre el tamaño de las secuencias y su composición GC. Utiliza densidad de color para mostrar concentraciones de puntos, revelando si genes más largos tienden a tener composiciones GC específicas o si no existe relación aparente."
     }
 
 def init_session_state():
@@ -262,7 +260,7 @@ def mostrar_seleccion_graficos():
         
         for chart in charts:
             selected = st.checkbox(
-                chart["name"],  # Ya no incluye prefijo GF
+                chart["name"], 
                 value=chart["id"] in st.session_state.selected_charts,
                 key=f"chart_{chart['id']}",
                 help=chart["description"]
@@ -291,7 +289,7 @@ def ejecutar_analisis(salmonella_file, gallus_file, params: Dict):
         num_charts = len(st.session_state.selected_charts)
         
         with st.status("Procesando análisis...", expanded=True) as status:
-            st.write(f"**Información del análisis:**")
+            st.write(f"Información del análisis:")
             st.write(f"Archivo Salmonella: {salmonella_file.name} ({tamaño_sal:.1f}MB)")
             st.write(f"Archivo Gallus: {gallus_file.name} ({tamaño_gall:.1f}MB)")
             st.write(f"Gráficos seleccionados: {num_charts}")
@@ -503,7 +501,7 @@ def interfaz_carga_archivos():
             es_valido, mensaje = validar_archivo_fasta(gallus_file)
             if es_valido:
                 tamaño_mb = gallus_file.size / (1024 * 1024)
-                st.markdown(f'<p class="upload-success">✓ Válido: {gallus_file.name} ({tamaño_mb:.1f}MB)</p>', unsafe_allow_html=True)
+                st.markdown(f'<p class="upload-success"> Válido: {gallus_file.name} ({tamaño_mb:.1f}MB)</p>', unsafe_allow_html=True)
             else:
                 st.error(f" {mensaje}")
         st.markdown('</div>', unsafe_allow_html=True)
@@ -572,7 +570,7 @@ def main():
     
     archivos_listos = st.session_state.files_validated
     ejecutar_btn = st.button(
-        "🚀 EJECUTAR ANÁLISIS COMPLETO", 
+        " EJECUTAR ANÁLISIS COMPLETO", 
         type="primary",
         use_container_width=True,
         disabled=not archivos_listos,
@@ -594,10 +592,10 @@ def main():
         status = st.session_state.analysis_status
         
         if status == 'SUBMITTED':
-            st.info("⏳ Análisis en cola de procesamiento...")
+            st.info(" Análisis en cola de procesamiento...")
             st.progress(0.3)
         elif status == 'RUNNING':
-            st.info("🔬 Procesamiento en curso...")
+            st.info(" Procesamiento en curso...")
             st.progress(0.7)
         elif status == 'COMPLETED':
             st.success(" Análisis completado exitosamente!")
