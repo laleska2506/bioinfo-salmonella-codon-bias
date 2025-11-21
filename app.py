@@ -1,6 +1,6 @@
 """
-Frontend Web para SalmoAvianLight - Versión Final
-Con nuevos gráficos y descripciones específicas
+Frontend Web para SalmoAvianLight - Versión Corregida
+Gráficos y descripciones exactas con carga ultra rápida
 """
 import streamlit as st
 import pandas as pd
@@ -108,11 +108,11 @@ st.markdown("""
 # CACHE ULTRA RÁPIDO
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_available_charts():
-    """Cache de la lista de gráficos disponibles con nuevos IDs"""
+    """Cache de la lista de gráficos disponibles corregidos"""
     return [
         {
             "id": "GF1",
-            "name": "Distribución del Contenido GC (Gallus)", 
+            "name": "Distribución del contenido GC - Gallus", 
             "category": "Distribuciones de GC",
             "description": "Distribución del contenido GC en Gallus",
             "fast": True,
@@ -120,7 +120,7 @@ def get_available_charts():
         },
         {
             "id": "GF2",
-            "name": "Distribución del Contenido GC (Salmonella)", 
+            "name": "Distribución del contenido GC - Salmonella", 
             "category": "Distribuciones de GC",
             "description": "Distribución del contenido GC en Salmonella",
             "fast": True,
@@ -128,7 +128,7 @@ def get_available_charts():
         },
         {
             "id": "GF3",
-            "name": "Distribución del Contenido GC (Comparativa)",
+            "name": "Distribución del contenido GC - Comparativa",
             "category": "Distribuciones de GC", 
             "description": "Comparativa de distribución GC entre especies",
             "fast": True,
@@ -160,7 +160,7 @@ def get_available_charts():
         },
         {
             "id": "GF7",
-            "name": "Correlación del Uso de Codones",
+            "name": "Correlación del Uso de Codones entre Salmonella y Gallus",
             "category": "Análisis de Codones", 
             "description": "Correlación en uso de codones entre especies",
             "fast": False,
@@ -186,7 +186,7 @@ def get_available_charts():
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_chart_descriptions():
-    """Cache del diccionario de descripciones con las nuevas descripciones específicas"""
+    """Cache del diccionario de descripciones corregidas"""
     return {
         "DESCRIPCION_G1": "La distribución del contenido GC en Gallus permite evaluar la composición nucleotídica general de sus genes y detectar posibles sesgos genómicos característicos de la especie. Al observar la forma de la distribución, se identifican zonas de mayor frecuencia que indican rangos de GC preferidos por el organismo. Este análisis proporciona información relevante sobre estabilidad estructural del ADN, presión evolutiva y posibles implicaciones funcionales en la expresión genética. Además, sirve como referencia inicial para comparar el contenido GC con el de otras especies y explorar relaciones con características estructurales como la longitud de los genes o la organización genómica.",
         
@@ -280,19 +280,10 @@ def mostrar_seleccion_graficos_rapida():
     # Obtener datos cacheados
     available_charts = get_available_charts()
     
-    # Modo turbo para máxima velocidad
-    modo_turbo = st.checkbox(
-        "Modo Turbo (Gráficos Rápidos)", 
-        value=True,
-        help="Selecciona automáticamente solo los gráficos de procesamiento más rápido"
-    )
+    # Selección manual de los 9 gráficos
+    st.markdown("**Selecciona los gráficos que deseas generar:**")
     
-    if modo_turbo:
-        st.session_state.selected_charts = [chart["id"] for chart in available_charts if chart["fast"]]
-        st.success("Modo Turbo activado: Procesamiento máximo velocidad")
-        return
-    
-    # Selección manual optimizada
+    # Organizar por categorías
     categorias = {}
     for chart in available_charts:
         if chart["category"] not in categorias:
@@ -336,20 +327,19 @@ def ejecutar_analisis_turbo(salmonella_file, gallus_file, params: Dict):
         tamaño_gall = gallus_file.size / (1024 * 1024)
         num_charts = len(st.session_state.selected_charts)
         
-        st.write(f"**Procesamiento Turbo Activado:**")
-        st.write(f"- Archivo Salmonella: {tamaño_sal:.1f}MB")
-        st.write(f"- Archivo Gallus: {tamaño_gall:.1f}MB")
+        st.write(f"**Información del análisis:**")
+        st.write(f"- Archivo Salmonella: {salmonella_file.name} ({tamaño_sal:.1f}MB)")
+        st.write(f"- Archivo Gallus: {gallus_file.name} ({tamaño_gall:.1f}MB)")
         st.write(f"- Gráficos seleccionados: {num_charts}")
         
         # Procesamiento ultra rápido
-        with st.spinner("Procesamiento turbo en curso..."):
+        with st.spinner("Procesando archivos FASTA..."):
             salmonella_content, gallus_content = procesamiento_ultra_rapido(
                 salmonella_file, gallus_file
             )
         
         # Parámetros optimizados
         params['selected_charts'] = st.session_state.selected_charts
-        params['turbo_mode'] = True
         
         # Ejecutar análisis
         if st.session_state.analysis_client.mode == "API":
@@ -529,15 +519,6 @@ def main():
     st.markdown('<div class="main-header">SalmoAvianLight</div>', unsafe_allow_html=True)
     st.markdown('<div class="subheader">Análisis Comparativo de Secuencias Genéticas</div>', unsafe_allow_html=True)
     
-    # Indicadores de velocidad
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.info("Procesamiento Turbo")
-    with col2:
-        st.info("Resultados Inmediatos")
-    with col3:
-        st.info("Optimizado con Cache")
-    
     # Sección 1: Carga ultrarrápida
     st.markdown('<div class="section-header">Carga de Archivos FASTA</div>', unsafe_allow_html=True)
     
@@ -573,7 +554,7 @@ def main():
             else:
                 st.error(f"Error: {mensaje}")
     
-    # Sección 2: Configuración turbo
+    # Sección 2: Configuración de gráficos
     st.markdown('<div class="section-header">Configuración de Análisis</div>', unsafe_allow_html=True)
     
     mostrar_seleccion_graficos_rapida()
@@ -589,7 +570,7 @@ def main():
     
     params = {'min_len': min_len, 'limpiar_ns': limpiar_ns, 'top_codons': top_codons}
     
-    # Sección 3: Ejecución turbo
+    # Sección 3: Ejecución
     st.markdown('<div class="section-header">Ejecución del Análisis</div>', unsafe_allow_html=True)
     
     ejecutar_btn = st.button(
