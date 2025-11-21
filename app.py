@@ -1,6 +1,6 @@
 """
-Frontend Web para SalmoAvianLight - Versión con Gráficos Reorganizados
-Manteniendo nombres y descripciones originales pero reorganizando el orden de generación
+Frontend Web para SalmoAvianLight - Versión Ordenada y Corregida
+Conexión exacta entre gráficos y descripciones
 """
 import streamlit as st
 import pandas as pd
@@ -118,35 +118,71 @@ st.markdown("""
 # CACHE ULTRA RÁPIDO
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_available_charts():
-    """Cache de la lista de gráficos disponibles con reorganización"""
+    """Cache de la lista de gráficos disponibles en orden correcto"""
     return [
-        # GRÁFICOS QUE SE MANTIENEN EN SU POSICIÓN ORIGINAL
         {
             "id": "GF1",
             "name": "GF1 - Distribución del Contenido GC (Gallus)", 
             "category": "Distribuciones de GC",
             "description": "Distribución del contenido GC en Gallus",
             "fast": True,
-            "desc_id": "DESCRIPCION_G1",
-            "original_position": 1
+            "desc_id": "DESCRIPCION_G1"
         },
         {
-            "id": "GF6", 
-            "name": "GF6 - Top 15 Codones Más Frecuentes (Comparación entre Especies)",
+            "id": "GF2",
+            "name": "GF2 - Distribución del Contenido GC (Salmonella)", 
+            "category": "Distribuciones de GC",
+            "description": "Distribución del contenido GC en Salmonella",
+            "fast": True,
+            "desc_id": "DESCRIPCION_G2"
+        },
+        {
+            "id": "GF3",
+            "name": "GF3 - Distribución del Contenido GC (Comparativa)",
+            "category": "Distribuciones de GC", 
+            "description": "Comparativa de distribución GC entre especies",
+            "fast": True,
+            "desc_id": "DESCRIPCION_G3"
+        },
+        {
+            "id": "GF4",
+            "name": "GF4 - Distribución Acumulativa de Longitudes de Genes",
+            "category": "Distribuciones de Longitud",
+            "description": "Distribución acumulativa de longitudes génicas", 
+            "fast": True,
+            "desc_id": "DESCRIPCION_G4"
+        },
+        {
+            "id": "GF5", 
+            "name": "GF5 - Distribución de Longitudes de Secuencias",
+            "category": "Distribuciones de Longitud",
+            "description": "Distribución general de longitudes de secuencias",
+            "fast": True,
+            "desc_id": "DESCRIPCION_G5"
+        },
+        {
+            "id": "GF6",
+            "name": "GF6 - Top 15 Codones Más Frecuentes (Comparación entre Especies)", 
             "category": "Análisis de Codones",
             "description": "Comparación de codones más frecuentes entre especies",
             "fast": True,
-            "desc_id": "DESCRIPCION_G6",
-            "original_position": 6
+            "desc_id": "DESCRIPCION_G6"
         },
         {
-            "id": "GF8",
+            "id": "GF7",
+            "name": "GF7 - Correlación del Uso de Codones entre Salmonella y Gallus",
+            "category": "Análisis de Codones", 
+            "description": "Correlación en uso de codones entre especies",
+            "fast": False,
+            "desc_id": "DESCRIPCION_G7"
+        },
+        {
+            "id": "GF8", 
             "name": "GF8 - Heatmap de Uso de Codones en Salmonella",
             "category": "Análisis de Codones",
             "description": "Heatmap de uso de codones específico para Salmonella",
             "fast": False,
-            "desc_id": "DESCRIPCION_G8",
-            "original_position": 8
+            "desc_id": "DESCRIPCION_G8"
         },
         {
             "id": "GF9",
@@ -154,60 +190,13 @@ def get_available_charts():
             "category": "Análisis de Relaciones", 
             "description": "Relación entre longitud de secuencias y contenido GC",
             "fast": True,
-            "desc_id": "DESCRIPCION_G9",
-            "original_position": 9
-        },
-        # GRÁFICOS REORGANIZADOS
-        {
-            "id": "GF2",  # Este ID ahora genera el gráfico de comparativa GC
-            "name": "GF2 - Distribución del Contenido GC (Comparativa)",
-            "category": "Distribuciones de GC", 
-            "description": "Comparativa de distribución GC entre especies",
-            "fast": True,
-            "desc_id": "DESCRIPCION_G3",  # Descripción del GF3 original
-            "original_position": 3
-        },
-        {
-            "id": "GF3",  # Este ID ahora genera el gráfico de distribución longitudes
-            "name": "GF3 - Distribución de Longitudes de Secuencias",
-            "category": "Distribuciones de Longitud",
-            "description": "Distribución general de longitudes de secuencias",
-            "fast": True,
-            "desc_id": "DESCRIPCION_G5",  # Descripción del GF5 original
-            "original_position": 5
-        },
-        {
-            "id": "GF4",  # Este ID ahora genera el gráfico de correlación codones
-            "name": "GF4 - Correlación del Uso de Codones entre Salmonella y Gallus",
-            "category": "Análisis de Codones", 
-            "description": "Correlación en uso de codones entre especies",
-            "fast": False,
-            "desc_id": "DESCRIPCION_G7",  # Descripción del GF7 original
-            "original_position": 7
-        },
-        {
-            "id": "GF5",  # Este ID ahora genera el gráfico de distribución acumulativa
-            "name": "GF5 - Distribución Acumulativa de Longitudes de Genes",
-            "category": "Distribuciones de Longitud",
-            "description": "Distribución acumulativa de longitudes génicas", 
-            "fast": True,
-            "desc_id": "DESCRIPCION_G4",  # Descripción del GF4 original
-            "original_position": 4
-        },
-        {
-            "id": "GF7",  # Este ID ahora genera el gráfico de Salmonella GC
-            "name": "GF7 - Distribución del Contenido GC (Salmonella)", 
-            "category": "Distribuciones de GC",
-            "description": "Distribución del contenido GC en Salmonella",
-            "fast": True,
-            "desc_id": "DESCRIPCION_G2",  # Descripción del GF2 original
-            "original_position": 2
+            "desc_id": "DESCRIPCION_G9"
         }
     ]
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_chart_descriptions():
-    """Cache del diccionario de descripciones manteniendo las originales"""
+    """Cache del diccionario de descripciones en orden correcto"""
     return {
         "DESCRIPCION_G1": "La distribución del contenido GC en Gallus permite evaluar la composición nucleotídica general de sus genes y detectar posibles sesgos genómicos característicos de la especie. Al observar la forma de la distribución, se identifican zonas de mayor frecuencia que indican rangos de GC preferidos por el organismo. Este análisis proporciona información relevante sobre estabilidad estructural del ADN, presión evolutiva y posibles implicaciones funcionales en la expresión genética. Además, sirve como referencia inicial para comparar el contenido GC con el de otras especies y explorar relaciones con características estructurales como la longitud de los genes o la organización genómica.",
         
@@ -265,15 +254,16 @@ def validar_archivo_fasta_ultra_rapido(archivo) -> Tuple[bool, Optional[str]]:
     
     # Validación de formato ultra rápida (solo primeros bytes)
     try:
-        primeros_bytes = archivo.read(100)
-        archivo.seek(0)
+        primeros_bytes = archivo.read(100)  # Solo 100 bytes para validar
+        archivo.seek(0)  # Resetear posición
         if not primeros_bytes.startswith(b'>'):
             return False, "Formato FASTA inválido - debe comenzar con '>'"
         
+        # Verificar que tenga al menos una secuencia
         if b'\n>' in primeros_bytes or b'\r>' in primeros_bytes:
-            return True, None
+            return True, None  # Múltiples secuencias
         elif b'\n' in primeros_bytes and len(primeros_bytes) > 50:
-            return True, None
+            return True, None  # Al menos una secuencia válida
             
     except Exception as e:
         return False, f"Error de lectura: {str(e)}"
@@ -306,25 +296,28 @@ def leer_archivo_ultra_rapido(file):
     """Lee archivo de manera ULTRA rápida"""
     return file.getvalue()
 
-def mostrar_seleccion_graficos_reorganizada():
-    """Selección de gráficos manteniendo la reorganización"""
+def mostrar_seleccion_graficos_ordenada():
+    """Selección ordenada de gráficos manteniendo el orden GF1-GF9"""
     st.markdown('<div class="section-header">Selección de Gráficos para Análisis</div>', unsafe_allow_html=True)
     
+    # Obtener datos cacheados
     available_charts = get_available_charts()
     
+    # Selección manual manteniendo el orden GF1-GF9
     st.markdown("**Selecciona los gráficos que deseas generar:**")
     
-    # Organizar por categorías manteniendo el orden reorganizado
+    # Organizar por categorías manteniendo orden
     categorias = {}
     for chart in available_charts:
         if chart["category"] not in categorias:
             categorias[chart["category"]] = []
         categorias[chart["category"]].append(chart)
     
-    # Mostrar en el orden reorganizado
+    # Mostrar en orden GF1-GF9 por categorías
     for categoria, charts in categorias.items():
         st.markdown(f'<div class="category-header">{categoria}</div>', unsafe_allow_html=True)
         
+        # Mostrar checkboxes en filas de 3 manteniendo orden
         cols = st.columns(3)
         for idx, chart in enumerate(charts):
             with cols[idx % 3]:
@@ -340,8 +333,8 @@ def mostrar_seleccion_graficos_reorganizada():
                 elif not selected and chart["id"] in st.session_state.selected_charts:
                     st.session_state.selected_charts.remove(chart["id"])
 
-def ejecutar_analisis_reorganizado(salmonella_file, gallus_file, params: Dict):
-    """Ejecuta análisis con gráficos reorganizados"""
+def ejecutar_analisis_ordenado(salmonella_file, gallus_file, params: Dict):
+    """Ejecuta análisis manteniendo orden correcto"""
     try:
         st.session_state.processing_start_time = time.time()
         
@@ -357,6 +350,7 @@ def ejecutar_analisis_reorganizado(salmonella_file, gallus_file, params: Dict):
         tamaño_gall = gallus_file.size / (1024 * 1024)
         num_charts = len(st.session_state.selected_charts)
         
+        # Mostrar información de procesamiento
         with st.status("Procesando análisis...", expanded=True) as status:
             st.write(f"**Información del análisis:**")
             st.write(f"Archivo Salmonella: {salmonella_file.name} ({tamaño_sal:.1f}MB)")
@@ -369,7 +363,7 @@ def ejecutar_analisis_reorganizado(salmonella_file, gallus_file, params: Dict):
                 salmonella_file, gallus_file
             )
             
-            # Parámetros con gráficos reorganizados
+            # Parámetros optimizados
             params['selected_charts'] = st.session_state.selected_charts
             
             # Ejecutar análisis
@@ -418,27 +412,29 @@ def ejecutar_analisis_reorganizado(salmonella_file, gallus_file, params: Dict):
         st.error(f"Error: {str(e)}")
         return False
 
-def mostrar_graficos_reorganizados(images: List):
-    """Muestra gráficos con la reorganización aplicada"""
+def mostrar_graficos_conexion_exacta(images: List):
+    """Muestra gráficos con conexión EXACTA entre gráfico y descripción"""
     st.markdown('<div class="section-header">Resultados Gráficos Generados</div>', unsafe_allow_html=True)
     
     if not images:
         st.info("No se generaron gráficos con la configuración actual")
         return
     
+    # Obtener datos cacheados
     available_charts = get_available_charts()
     chart_descriptions = get_chart_descriptions()
     
-    # CONEXIÓN EXACTA con reorganización
+    # CONEXIÓN EXACTA: Mapear cada gráfico seleccionado con su imagen y descripción
     chart_image_pairs = []
     
     for i, chart_id in enumerate(st.session_state.selected_charts):
         if i < len(images):
+            # Buscar la información exacta del gráfico
             chart_info = next((c for c in available_charts if c["id"] == chart_id), None)
             if chart_info:
                 chart_image_pairs.append((chart_info, images[i]))
     
-    # Mostrar en orden de selección con reorganización
+    # Mostrar en ORDEN CORRECTO manteniendo la conexión exacta
     for chart_info, image_path in chart_image_pairs:
         with st.container():
             st.markdown(f'<div class="chart-container">', unsafe_allow_html=True)
@@ -461,14 +457,14 @@ def mostrar_graficos_reorganizados(images: List):
             except Exception as e:
                 st.error(f"Error cargando gráfico {chart_info['name']}: {e}")
             
-            # DESCRIPCIÓN CORRECTA según reorganización
+            # DESCRIPCIÓN EXACTA correspondiente al gráfico
             descripcion = chart_descriptions.get(chart_info["desc_id"], "Descripción no disponible.")
             st.markdown(f'<div class="chart-description">{descripcion}</div>', unsafe_allow_html=True)
             
             st.markdown('</div>', unsafe_allow_html=True)
 
-def mostrar_resultados_reorganizados(resultados: Dict):
-    """Muestra resultados con gráficos reorganizados"""
+def mostrar_resultados_ordenados(resultados: Dict):
+    """Muestra resultados manteniendo orden y conexiones exactas"""
     st.markdown('<div class="section-header">Resultados del Análisis</div>', unsafe_allow_html=True)
     
     # Métricas rápidas
@@ -522,9 +518,9 @@ def mostrar_resultados_reorganizados(resultados: Dict):
         except Exception as e:
             st.error(f"Error cargando datos de codones: {e}")
     
-    # Gráficos reorganizados
+    # Gráficos con conexión exacta
     images = resultados.get('images', [])
-    mostrar_graficos_reorganizados(images)
+    mostrar_graficos_conexion_exacta(images)
 
 def validar_y_cargar_archivos_rapido():
     """Validación y carga ULTRA rápida de archivos"""
@@ -575,7 +571,7 @@ def validar_y_cargar_archivos_rapido():
     return salmonella_file, gallus_file
 
 def main():
-    """Aplicación principal con gráficos reorganizados"""
+    """Aplicación principal ordenada y corregida"""
     init_session_state()
     
     # Header
@@ -608,7 +604,7 @@ def main():
     # Sección 2: Configuración de gráficos
     st.markdown('<div class="section-header">Configuración de Análisis</div>', unsafe_allow_html=True)
     
-    mostrar_seleccion_graficos_reorganizada()
+    mostrar_seleccion_graficos_ordenada()
     
     # Parámetros rápidos
     col1, col2, col3 = st.columns(3)
@@ -624,6 +620,7 @@ def main():
     # Sección 3: Ejecución
     st.markdown('<div class="section-header">Ejecución del Análisis</div>', unsafe_allow_html=True)
     
+    # Botón de ejecución con validación
     archivos_listos = salmonella_file and gallus_file and st.session_state.files_validated
     ejecutar_btn = st.button(
         "EJECUTAR ANÁLISIS", 
@@ -634,11 +631,13 @@ def main():
     )
     
     if ejecutar_btn and archivos_listos:
+        # Limpieza rápida
         st.session_state.analysis_results = None
         st.session_state.analysis_status = None
         st.session_state.error_message = None
         
-        if ejecutar_analisis_reorganizado(salmonella_file, gallus_file, params):
+        # Ejecución ordenada
+        if ejecutar_analisis_ordenado(salmonella_file, gallus_file, params):
             st.rerun()
         else:
             st.error(f"Error al ejecutar análisis: {st.session_state.error_message}")
@@ -667,7 +666,7 @@ def main():
                     st.error(f"Error obteniendo resultados: {e}")
             
             if st.session_state.analysis_results:
-                mostrar_resultados_reorganizados(st.session_state.analysis_results)
+                mostrar_resultados_ordenados(st.session_state.analysis_results)
             else:
                 st.warning("Los resultados no están disponibles aún.")
         
