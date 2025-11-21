@@ -1,6 +1,6 @@
 """
-Frontend Web para SalmoAvianLight - Versión Reorganizada
-Orden exacto: GF1, GF8, GF2, GF7, GF3, GF6, GF4, GF5, GF9
+Frontend Web para SalmoAvianLight - Versión Corregida
+Coincidencia exacta con los gráficos generados por visualizacion.py
 """
 import streamlit as st
 import pandas as pd
@@ -92,117 +92,108 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ORDEN EXACTO DE GRÁFICOS: GF1, GF8, GF2, GF7, GF3, GF6, GF4, GF5, GF9
-CHART_ORDER = ["GF1", "GF8", "GF2", "GF7", "GF3", "GF6", "GF4", "GF5", "GF9"]
+# MAESTRO DE GRÁFICOS - COINCIDENCIA EXACTA CON visualizacion.py
+CHART_MASTER = {
+    "distribucion_longitudes": {
+        "id": "GF5",
+        "name": "GF5 - Distribución de Longitudes de Secuencias",
+        "category": "Distribuciones Básicas",
+        "description": "Histograma de distribución de longitudes de secuencias",
+        "filename": "distribucion_longitudes.png",
+        "desc_id": "DESC_GF5"
+    },
+    "distribucion_gc": {
+        "id": "GF3", 
+        "name": "GF3 - Distribución del Contenido de GC",
+        "category": "Distribuciones Básicas",
+        "description": "Distribución general del contenido GC",
+        "filename": "distribucion_gc.png",
+        "desc_id": "DESC_GF3"
+    },
+    "relacion_longitud_gc": {
+        "id": "GF9",
+        "name": "GF9 - Relación entre Longitud y Contenido de GC", 
+        "category": "Análisis de Relaciones",
+        "description": "Gráfico de dispersión entre longitud y contenido GC",
+        "filename": "relacion_longitud_gc.png",
+        "desc_id": "DESC_GF9"
+    },
+    "uso_codones_top20": {
+        "id": "GF6",
+        "name": "GF6 - Top 20 Codones Más Frecuentes",
+        "category": "Análisis de Codones",
+        "description": "Comparación de los 20 codones más frecuentes entre especies",
+        "filename": "uso_codones_top20.png", 
+        "desc_id": "DESC_GF6"
+    },
+    "correlacion_codones": {
+        "id": "GF7",
+        "name": "GF7 - Correlación del Uso de Codones",
+        "category": "Análisis de Codones",
+        "description": "Correlación entre uso de codones de Salmonella y Gallus",
+        "filename": "correlacion_codones.png",
+        "desc_id": "DESC_GF7"
+    },
+    "heatmap_codones": {
+        "id": "GF8",
+        "name": "GF8 - Heatmap de Uso de Codones en Salmonella", 
+        "category": "Análisis de Codones",
+        "description": "Heatmap organizado por familias de codones",
+        "filename": "heatmap_codones.png",
+        "desc_id": "DESC_GF8"
+    },
+    "distribucion_acumulativa_longitudes": {
+        "id": "GF4",
+        "name": "GF4 - Distribución Acumulativa de Longitudes de Genes",
+        "category": "Distribuciones Avanzadas", 
+        "description": "Distribución acumulativa con percentiles marcados",
+        "filename": "distribucion_acumulativa_longitudes.png",
+        "desc_id": "DESC_GF4"
+    },
+    "gallus_gc": {
+        "id": "GF1",
+        "name": "GF1 - Distribución del Contenido GC (Gallus)",
+        "category": "Distribuciones por Especie", 
+        "description": "Distribución específica de contenido GC en Gallus",
+        "filename": "gallus_gc.png",
+        "desc_id": "DESC_GF1"
+    },
+    "salmonella_gc": {
+        "id": "GF2",
+        "name": "GF2 - Distribución del Contenido GC (Salmonella)",
+        "category": "Distribuciones por Especie",
+        "description": "Distribución específica de contenido GC en Salmonella", 
+        "filename": "salmonella_gc.png",
+        "desc_id": "DESC_GF2"
+    }
+}
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_available_charts():
-    """Gráficos disponibles en el ORDEN EXACTO requerido"""
-    return [
-        # GF1 - Distribución GC Gallus
-        {
-            "id": "GF1",
-            "name": "GF1 - Distribución del Contenido GC (Gallus)", 
-            "category": "Composición Genómica",
-            "description": "Distribución del contenido GC en Gallus",
-            "fast": True,
-            "desc_id": "DESCRIPCION_G1"
-        },
-        # GF8 - Heatmap Salmonella
-        {
-            "id": "GF8", 
-            "name": "GF8 - Heatmap de Uso de Codones en Salmonella",
-            "category": "Análisis de Codones",
-            "description": "Heatmap de uso de codones específico para Salmonella",
-            "fast": False,
-            "desc_id": "DESCRIPCION_G8"
-        },
-        # GF2 - Distribución GC Salmonella
-        {
-            "id": "GF2",
-            "name": "GF2 - Distribución del Contenido GC (Salmonella)", 
-            "category": "Composición Genómica",
-            "description": "Distribución del contenido GC en Salmonella",
-            "fast": True,
-            "desc_id": "DESCRIPCION_G2"
-        },
-        # GF7 - Correlación codones
-        {
-            "id": "GF7",
-            "name": "GF7 - Correlación del Uso de Codones entre Salmonella y Gallus",
-            "category": "Análisis de Codones", 
-            "description": "Correlación en uso de codones entre especies",
-            "fast": False,
-            "desc_id": "DESCRIPCION_G7"
-        },
-        # GF3 - Comparativa GC
-        {
-            "id": "GF3",
-            "name": "GF3 - Distribución del Contenido GC (Comparativa)",
-            "category": "Composición Genómica", 
-            "description": "Comparativa de distribución GC entre especies",
-            "fast": True,
-            "desc_id": "DESCRIPCION_G3"
-        },
-        # GF6 - Top codones
-        {
-            "id": "GF6",
-            "name": "GF6 - Top 15 Codones Más Frecuentes (Comparación entre Especies)", 
-            "category": "Análisis de Codones",
-            "description": "Comparación de codones más frecuentes entre especies",
-            "fast": True,
-            "desc_id": "DESCRIPCION_G6"
-        },
-        # GF4 - Distribución acumulativa longitudes
-        {
-            "id": "GF4",
-            "name": "GF4 - Distribución Acumulativa de Longitudes de Genes",
-            "category": "Distribución de Longitudes",
-            "description": "Distribución acumulativa de longitudes génicas", 
-            "fast": True,
-            "desc_id": "DESCRIPCION_G4"
-        },
-        # GF5 - Distribución general longitudes
-        {
-            "id": "GF5", 
-            "name": "GF5 - Distribución de Longitudes de Secuencias",
-            "category": "Distribución de Longitudes",
-            "description": "Distribución general de longitudes de secuencias",
-            "fast": True,
-            "desc_id": "DESCRIPCION_G5"
-        },
-        # GF9 - Relación longitud-GC
-        {
-            "id": "GF9",
-            "name": "GF9 - Relación entre Longitud y Contenido GC",
-            "category": "Análisis Integrado", 
-            "description": "Relación entre longitud de secuencias y contenido GC",
-            "fast": True,
-            "desc_id": "DESCRIPCION_G9"
-        }
-    ]
+    """Gráficos disponibles que COINCIDEN EXACTAMENTE con visualizacion.py"""
+    return list(CHART_MASTER.values())
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_chart_descriptions():
-    """Descripciones específicas para cada gráfico"""
+    """Descripciones que coinciden con los gráficos reales generados"""
     return {
-        "DESCRIPCION_G1": "**Distribución del Contenido GC en Gallus** - Muestra la frecuencia de los valores de contenido GC en las secuencias de Gallus. Permite identificar patrones composicionales característicos de la especie aviar y establecer comparaciones con la composición bacteriana.",
+        "DESC_GF1": "**Distribución del Contenido GC en Gallus** - Muestra la frecuencia de los valores de contenido GC específicamente en las secuencias de Gallus. Permite identificar patrones composicionales característicos de la especie aviar, mostrando si existe un rango preferido de contenido GC y la variabilidad composicional del genoma.",
         
-        "DESCRIPCION_G8": "**Heatmap de Uso de Codones en Salmonella** - Representación visual de la frecuencia de uso de cada codón en Salmonella. Los colores indican intensidad de uso, permitiendo identificar codones preferidos y patrones de uso específicos de la bacteria.",
+        "DESC_GF2": "**Distribución del Contenido GC en Salmonella** - Analiza la composición nucleotídica específica de las secuencias de Salmonella. Revela sesgos genómicos característicos de bacterias y permite identificar la distribución particular del contenido GC en este organismo, mostrando posibles adaptaciones evolutivas en su composición genética.",
         
-        "DESCRIPCION_G2": "**Distribución del Contenido GC en Salmonella** - Analiza la composición nucleotídica de las secuencias de Salmonella. Revela sesgos genómicos característicos de bacterias y permite comparaciones directas con el contenido GC de Gallus.",
+        "DESC_GF3": "**Distribución General del Contenido GC** - Histograma que muestra la distribución global del contenido GC combinando ambas especies. Proporciona una visión general de la composición nucleotídica del conjunto de datos completo, identificando modas y rangos predominantes de contenido GC sin distinción de especie.",
         
-        "DESCRIPCION_G7": "**Correlación del Uso de Codones** - Gráfico de dispersión que compara la frecuencia de uso de cada codón entre Salmonella y Gallus. Una correlación alta indica patrones similares, mientras que baja correlación sugiere adaptaciones especie-específicas.",
+        "DESC_GF4": "**Distribución Acumulativa de Longitudes de Genes** - Gráfico de distribución acumulativa que muestra la proporción de genes por debajo de cierta longitud. Incluye marcadores de percentiles (25%, 50%, 75%, 90%) que permiten identificar valores de referencia para el tamaño génico en el conjunto de datos analizado.",
         
-        "DESCRIPCION_G3": "**Comparativa de Distribución GC** - Superposición de las distribuciones de contenido GC de ambas especies. Facilita la identificación visual de diferencias composicionales y patrones evolutivos divergentes.",
+        "DESC_GF5": "**Distribución de Longitudes de Secuencias** - Histograma detallado de la distribución de longitudes de todas las secuencias analizadas. Muestra la frecuencia de diferentes tamaños de genes, permitiendo identificar si existen picos específicos, distribución normal o sesgos en el tamaño de las secuencias génicas.",
         
-        "DESCRIPCION_G6": "**Top 15 Codones Más Frecuentes** - Comparación directa de los codones más utilizados por cada especie. Revela preferencias codonales y posibles estrategias de optimización para la expresión génica.",
+        "DESC_GF6": "**Top 20 Codones Más Frecuentes** - Gráfico de barras comparativo que muestra los 20 codones con mayor frecuencia de uso en ambas especies. Permite identificar visualmente las preferencias codonales de cada organismo y comparar directamente cuáles codones son más utilizados en Salmonella versus Gallus.",
         
-        "DESCRIPCION_G4": "**Distribución Acumulativa de Longitudes** - Muestra la proporción acumulada de genes por debajo de cierta longitud. Útil para comprender la estructura global del tamaño génico en ambas especies.",
+        "DESC_GF7": "**Correlación del Uso de Codones** - Gráfico de dispersión que compara la frecuencia de uso de cada codón entre Salmonella y Gallus. La línea diagonal representa la correlación perfecta. Permite evaluar si existen patrones de uso similares o divergentes entre las especies a nivel de cada codón específico.",
         
-        "DESCRIPCION_G5": "**Distribución General de Longitudes** - Histograma que muestra la frecuencia de diferentes longitudes de secuencias. Identifica modas y rangos predominantes en el tamaño de genes.",
+        "DESC_GF8": "**Heatmap de Uso de Codones en Salmonella** - Representación matricial del uso de codones organizado por familias. El mapa de calor utiliza colores para indicar la intensidad de uso de cada codón, permitiendo identificar patrones grupales y preferencias en la utilización del código genético en Salmonella.",
         
-        "DESCRIPCION_G9": "**Relación Longitud vs Contenido GC** - Diagrama de dispersión que explora la correlación entre el tamaño de las secuencias y su composición GC. Revela si genes más largos tienden a tener composiciones específicas."
+        "DESC_GF9": "**Relación entre Longitud y Contenido GC** - Diagrama de dispersión que explora la posible correlación entre el tamaño de las secuencias y su composición GC. Utiliza densidad de color para mostrar concentraciones de puntos, revelando si genes más largos tienden a tener composiciones GC específicas o si no existe relación aparente."
     }
 
 def init_session_state():
@@ -252,43 +243,38 @@ def validar_archivo_fasta(archivo) -> Tuple[bool, Optional[str]]:
     
     return True, None
 
-def mostrar_seleccion_graficos_ordenada():
-    """Selección de gráficos en ORDEN EXACTO"""
+def mostrar_seleccion_graficos():
+    """Selección de gráficos que COINCIDEN con visualizacion.py"""
     st.markdown('<div class="section-header">Selección de Gráficos para Análisis</div>', unsafe_allow_html=True)
     
     available_charts = get_available_charts()
     
-    # Mostrar en el orden exacto definido
-    st.markdown("**Selecciona los gráficos que deseas generar:**")
-    
-    # Organizar por categorías manteniendo el orden
+    # Organizar por categorías
     categorias = {}
     for chart in available_charts:
         if chart["category"] not in categorias:
             categorias[chart["category"]] = []
         categorias[chart["category"]].append(chart)
     
+    # Mostrar por categorías
     for categoria, charts in categorias.items():
         st.markdown(f'**{categoria}**')
         
-        # Mostrar en columnas para mejor organización visual
-        cols = st.columns(2)
-        for idx, chart in enumerate(charts):
-            with cols[idx % 2]:
-                selected = st.checkbox(
-                    chart["name"],
-                    value=chart["id"] in st.session_state.selected_charts,
-                    key=f"chart_{chart['id']}",
-                    help=chart["description"]
-                )
-                
-                if selected and chart["id"] not in st.session_state.selected_charts:
-                    st.session_state.selected_charts.append(chart["id"])
-                elif not selected and chart["id"] in st.session_state.selected_charts:
-                    st.session_state.selected_charts.remove(chart["id"])
+        for chart in charts:
+            selected = st.checkbox(
+                chart["name"],
+                value=chart["id"] in st.session_state.selected_charts,
+                key=f"chart_{chart['id']}",
+                help=chart["description"]
+            )
+            
+            if selected and chart["id"] not in st.session_state.selected_charts:
+                st.session_state.selected_charts.append(chart["id"])
+            elif not selected and chart["id"] in st.session_state.selected_charts:
+                st.session_state.selected_charts.remove(chart["id"])
 
 def ejecutar_analisis(salmonella_file, gallus_file, params: Dict):
-    """Ejecuta el análisis manteniendo el orden de gráficos"""
+    """Ejecuta el análisis y genera gráficos que COINCIDEN con visualizacion.py"""
     try:
         st.session_state.processing_start_time = time.time()
         
@@ -315,10 +301,10 @@ def ejecutar_analisis(salmonella_file, gallus_file, params: Dict):
             salmonella_content = salmonella_file.getvalue()
             gallus_content = gallus_file.getvalue()
             
-            # Configurar parámetros con orden específico
+            # Configurar parámetros
             params['selected_charts'] = st.session_state.selected_charts
             
-            # Ejecutar análisis
+            # Ejecutar análisis - ESTO DEBE GENERAR LOS GRÁFICOS SEGÚN visualizacion.py
             st.write("Ejecutando análisis genético...")
             if st.session_state.analysis_client.mode == "API":
                 resultado = st.session_state.analysis_client.start_analysis(
@@ -329,6 +315,7 @@ def ejecutar_analisis(salmonella_file, gallus_file, params: Dict):
                 st.session_state.job_id = resultado.get('jobId')
                 st.session_state.analysis_status = 'SUBMITTED'
             else:
+                # Modo local - esto debe disparar la generación de gráficos según visualizacion.py
                 resultado = st.session_state.analysis_client.start_analysis(
                     salmonella_content,
                     gallus_content,
@@ -357,13 +344,9 @@ def ejecutar_analisis(salmonella_file, gallus_file, params: Dict):
         st.error(f"Error: {str(e)}")
         return False
 
-def mostrar_graficos_ordenados(images: List):
-    """Muestra gráficos en el ORDEN EXACTO definido"""
+def mostrar_graficos_correspondientes(resultados: Dict):
+    """Muestra gráficos que COINCIDEN EXACTAMENTE con los generados por visualizacion.py"""
     st.markdown('<div class="section-header">Resultados Gráficos Generados</div>', unsafe_allow_html=True)
-    
-    if not images:
-        st.info("No se generaron gráficos con la configuración actual")
-        return
     
     available_charts = get_available_charts()
     chart_descriptions = get_chart_descriptions()
@@ -371,52 +354,55 @@ def mostrar_graficos_ordenados(images: List):
     # Crear mapping de ID a información del gráfico
     chart_map = {chart["id"]: chart for chart in available_charts}
     
-    # MOSTRAR EN ORDEN EXACTO: GF1, GF8, GF2, GF7, GF3, GF6, GF4, GF5, GF9
-    displayed_count = 0
-    
-    for chart_id in CHART_ORDER:
-        if chart_id in st.session_state.selected_charts:
-            # Encontrar el índice correcto del gráfico en los resultados
-            selected_index = st.session_state.selected_charts.index(chart_id)
-            if selected_index < len(images):
-                chart_info = chart_map.get(chart_id)
-                image_path = images[selected_index]
+    # Para cada gráfico seleccionado, mostrar la imagen correspondiente
+    for chart_id in st.session_state.selected_charts:
+        chart_info = chart_map.get(chart_id)
+        if not chart_info:
+            continue
+            
+        # Encontrar el nombre del archivo correspondiente
+        filename = chart_info["filename"]
+        
+        with st.container():
+            st.markdown(f'<div class="chart-container">', unsafe_allow_html=True)
+            st.markdown(f'<div class="chart-title">{chart_info["name"]}</div>', unsafe_allow_html=True)
+            
+            # Mostrar gráfico - buscar la imagen en los resultados
+            try:
+                image_found = False
                 
-                if chart_info:
-                    with st.container():
-                        st.markdown(f'<div class="chart-container">', unsafe_allow_html=True)
-                        st.markdown(f'<div class="chart-title">{chart_info["name"]}</div>', unsafe_allow_html=True)
-                        
-                        # Mostrar gráfico
-                        try:
-                            if st.session_state.analysis_client.mode == "API":
-                                import requests
-                                response = requests.get(image_path, timeout=10)
-                                if response.status_code == 200:
-                                    st.image(response.content, use_container_width=True)
-                                else:
-                                    st.error(f"Error cargando gráfico: HTTP {response.status_code}")
-                            else:
-                                if Path(image_path).exists():
-                                    st.image(image_path, use_container_width=True)
-                                else:
-                                    st.error(f"Archivo no encontrado: {image_path}")
-                        except Exception as e:
-                            st.error(f"Error cargando gráfico {chart_info['name']}: {e}")
-                        
-                        # Descripción correspondiente
-                        descripcion = chart_descriptions.get(chart_info["desc_id"], "Descripción no disponible.")
-                        st.markdown(f'<div class="chart-description">{descripcion}</div>', unsafe_allow_html=True)
-                        
-                        st.markdown('</div>', unsafe_allow_html=True)
-                        
-                        displayed_count += 1
-    
-    if displayed_count == 0:
-        st.warning("Los gráficos seleccionados no están disponibles en los resultados")
+                if st.session_state.analysis_client.mode == "API":
+                    # En modo API, buscar en las URLs de resultados
+                    images = resultados.get('images', [])
+                    for img_url in images:
+                        if filename in img_url:
+                            import requests
+                            response = requests.get(img_url, timeout=10)
+                            if response.status_code == 200:
+                                st.image(response.content, use_container_width=True)
+                                image_found = True
+                                break
+                else:
+                    # En modo local, buscar en el sistema de archivos
+                    image_path = Path("results/graficos") / filename
+                    if image_path.exists():
+                        st.image(str(image_path), use_container_width=True)
+                        image_found = True
+                
+                if not image_found:
+                    st.warning(f"Gráfico no generado: {filename}")
+                    
+            except Exception as e:
+                st.error(f"Error cargando gráfico {chart_info['name']}: {e}")
+            
+            # Descripción correspondiente
+            descripcion = chart_descriptions.get(chart_info["desc_id"], "Descripción no disponible.")
+            st.markdown(f'<div class="chart-description">{descripcion}</div>', unsafe_allow_html=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
 
 def mostrar_resultados(resultados: Dict):
-    """Muestra todos los resultados manteniendo el orden correcto"""
+    """Muestra todos los resultados con gráficos correspondientes"""
     st.markdown('<div class="section-header">Resultados del Análisis</div>', unsafe_allow_html=True)
     
     # Métricas y datos
@@ -428,10 +414,14 @@ def mostrar_resultados(resultados: Dict):
             if st.session_state.analysis_client.mode == "API":
                 import requests
                 resumen_csv_url = resultados.get('resumen_csv_url')
-                response = requests.get(resumen_csv_url, timeout=10)
-                df_metricas = pd.read_csv(io.StringIO(response.text))
+                if resumen_csv_url:
+                    response = requests.get(resumen_csv_url, timeout=10)
+                    df_metricas = pd.read_csv(io.StringIO(response.text))
+                else:
+                    st.error("URL de métricas no disponible")
+                    return
             else:
-                df_metricas = pd.read_csv(resultados.get('resumen_csv_path'))
+                df_metricas = pd.read_csv(resultados.get('resumen_csv_path', 'results/resumen_metricas.csv'))
             
             st.dataframe(df_metricas.head(15), use_container_width=True)
             
@@ -452,10 +442,14 @@ def mostrar_resultados(resultados: Dict):
             if st.session_state.analysis_client.mode == "API":
                 import requests
                 codon_csv_url = resultados.get('codon_csv_url')
-                response = requests.get(codon_csv_url, timeout=10)
-                df_codones = pd.read_csv(io.StringIO(response.text))
+                if codon_csv_url:
+                    response = requests.get(codon_csv_url, timeout=10)
+                    df_codones = pd.read_csv(io.StringIO(response.text))
+                else:
+                    st.error("URL de codones no disponible")
+                    return
             else:
-                df_codones = pd.read_csv(resultados.get('codon_csv_path'))
+                df_codones = pd.read_csv(resultados.get('codon_csv_path', 'results/codon_usage.csv'))
             
             st.dataframe(df_codones.head(15), use_container_width=True)
             
@@ -470,9 +464,8 @@ def mostrar_resultados(resultados: Dict):
         except Exception as e:
             st.error(f"Error cargando datos de codones: {e}")
     
-    # Gráficos en ORDEN EXACTO
-    images = resultados.get('images', [])
-    mostrar_graficos_ordenados(images)
+    # Gráficos que COINCIDEN con visualizacion.py
+    mostrar_graficos_correspondientes(resultados)
 
 def interfaz_carga_archivos():
     """Interfaz para carga de archivos"""
@@ -495,7 +488,7 @@ def interfaz_carga_archivos():
                 tamaño_mb = salmonella_file.size / (1024 * 1024)
                 st.markdown(f'<p class="upload-success">✓ Válido: {salmonella_file.name} ({tamaño_mb:.1f}MB)</p>', unsafe_allow_html=True)
             else:
-                st.error(f" {mensaje}")
+                st.error(f"❌ {mensaje}")
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
@@ -513,7 +506,7 @@ def interfaz_carga_archivos():
                 tamaño_mb = gallus_file.size / (1024 * 1024)
                 st.markdown(f'<p class="upload-success">✓ Válido: {gallus_file.name} ({tamaño_mb:.1f}MB)</p>', unsafe_allow_html=True)
             else:
-                st.error(f" {mensaje}")
+                st.error(f"❌ {mensaje}")
         st.markdown('</div>', unsafe_allow_html=True)
     
     # Validar que ambos archivos estén presentes y sean válidos
@@ -528,7 +521,7 @@ def interfaz_carga_archivos():
     return salmonella_file, gallus_file
 
 def main():
-    """Aplicación principal completamente reorganizada"""
+    """Aplicación principal corregida - COINCIDE con visualizacion.py"""
     init_session_state()
     
     # Header
@@ -558,7 +551,7 @@ def main():
     # Sección 2: Configuración de análisis
     st.markdown('<div class="section-header">Configuración del Análisis</div>', unsafe_allow_html=True)
     
-    mostrar_seleccion_graficos_ordenada()
+    mostrar_seleccion_graficos()
     
     # Parámetros de análisis
     col1, col2, col3 = st.columns(3)
@@ -608,7 +601,7 @@ def main():
             st.info("🔬 Procesamiento en curso...")
             st.progress(0.7)
         elif status == 'COMPLETED':
-            st.success("Análisis completado exitosamente!")
+            st.success("✅ Análisis completado exitosamente!")
             
             if st.session_state.analysis_client.mode == "API" and st.session_state.job_id:
                 try:
@@ -622,7 +615,7 @@ def main():
                 mostrar_resultados(st.session_state.analysis_results)
         
         elif status == 'FAILED':
-            st.error("Error en el análisis")
+            st.error("❌ Error en el análisis")
             if st.session_state.error_message:
                 st.error(st.session_state.error_message)
 
