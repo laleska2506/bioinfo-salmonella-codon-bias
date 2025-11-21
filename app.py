@@ -488,7 +488,7 @@ def interfaz_carga_archivos():
                 tamaño_mb = salmonella_file.size / (1024 * 1024)
                 st.markdown(f'<p class="upload-success">✓ Válido: {salmonella_file.name} ({tamaño_mb:.1f}MB)</p>', unsafe_allow_html=True)
             else:
-                st.error(f"❌ {mensaje}")
+                st.error(f" {mensaje}")
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
@@ -506,7 +506,7 @@ def interfaz_carga_archivos():
                 tamaño_mb = gallus_file.size / (1024 * 1024)
                 st.markdown(f'<p class="upload-success">✓ Válido: {gallus_file.name} ({tamaño_mb:.1f}MB)</p>', unsafe_allow_html=True)
             else:
-                st.error(f"❌ {mensaje}")
+                st.error(f" {mensaje}")
         st.markdown('</div>', unsafe_allow_html=True)
     
     # Validar que ambos archivos estén presentes y sean válidos
@@ -601,7 +601,7 @@ def main():
             st.info("🔬 Procesamiento en curso...")
             st.progress(0.7)
         elif status == 'COMPLETED':
-            st.success("✅ Análisis completado exitosamente!")
+            st.success(" Análisis completado exitosamente!")
             
             if st.session_state.analysis_client.mode == "API" and st.session_state.job_id:
                 try:
@@ -615,7 +615,7 @@ def main():
                 mostrar_resultados(st.session_state.analysis_results)
         
         elif status == 'FAILED':
-            st.error("❌ Error en el análisis")
+            st.error(" Error en el análisis")
             if st.session_state.error_message:
                 st.error(st.session_state.error_message)
 
