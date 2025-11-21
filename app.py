@@ -1,6 +1,6 @@
 """
-Frontend Web para SalmoAvianLight - Versión Corregida
-9 gráficos con descripciones específicas y ordenadas
+Frontend Web para SalmoAvianLight - Versión Ultra Rápida
+Optimizado para máxima velocidad con descripciones precisas
 """
 import streamlit as st
 import pandas as pd
@@ -21,7 +21,7 @@ sys.path.insert(0, str(project_root))
 from services.analysis_client import AnalysisClient
 from utils.zipper import crear_zip_resultados
 
-# Configuración de la página
+# Configuración de la página para máximo rendimiento
 st.set_page_config(
     page_title="SalmoAvianLight",
     page_icon="🧬",
@@ -29,7 +29,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS profesionales
+# Estilos CSS optimizados
 st.markdown("""
     <style>
     /* Estilo para centrar el logo */
@@ -40,10 +40,6 @@ st.markdown("""
         width: 100%;
         margin: 0 auto;
         padding: 0;
-    }
-    .logo-wrapper img {
-        display: block;
-        margin: 0 auto;
     }
     .main-header {
         font-size: 2.5rem;
@@ -101,215 +97,264 @@ st.markdown("""
         background-color: #e8f4fd;
         border-radius: 5px;
     }
-    /* Asegurar que el logo esté centrado incluso con el padding de Streamlit */
+    /* Optimizaciones de rendimiento */
+    .stButton button {
+        width: 100%;
+    }
+    /* Reducir animaciones */
+    .stProgress > div > div > div > div {
+        background-color: #1f77b4;
+    }
+    /* Asegurar que el logo esté centrado */
     div[data-testid="stMarkdownContainer"]:has(.logo-wrapper) {
         text-align: center;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# Inicialización del session state
-if 'analysis_client' not in st.session_state:
-    st.session_state.analysis_client = AnalysisClient()
-if 'job_id' not in st.session_state:
-    st.session_state.job_id = None
-if 'analysis_status' not in st.session_state:
-    st.session_state.analysis_status = None
-if 'analysis_results' not in st.session_state:
-    st.session_state.analysis_results = None
-if 'last_params' not in st.session_state:
-    st.session_state.last_params = None
-if 'error_message' not in st.session_state:
-    st.session_state.error_message = None
-if 'execution_history' not in st.session_state:
-    st.session_state.execution_history = []
-if 'last_used_params' not in st.session_state:
-    st.session_state.last_used_params = None
-if 'selected_charts' not in st.session_state:
-    st.session_state.selected_charts = []
+# Inicialización del session state optimizada
+def init_session_state():
+    defaults = {
+        'analysis_client': AnalysisClient(),
+        'job_id': None,
+        'analysis_status': None,
+        'analysis_results': None,
+        'last_params': None,
+        'error_message': None,
+        'execution_history': [],
+        'last_used_params': None,
+        'selected_charts': [],
+        'file_cache': {},
+        'processing_start_time': None
+    }
+    
+    for key, value in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = value
 
-# Configuración de los 9 gráficos disponibles con descripciones específicas
+# Configuración de gráficos disponibles
 AVAILABLE_CHARTS = [
     {
         "id": "histograma_longitud",
         "name": "Histograma de Longitudes",
         "category": "Distribuciones Básicas",
         "description": "Distribución de frecuencias de longitudes de secuencias",
-        "technical_description": "Este histograma muestra la distribución de longitudes de las secuencias genéticas analizadas. Cada barra representa la cantidad de secuencias que caen dentro de un rango específico de longitud. La altura de las barras indica la frecuencia relativa. Una distribución normal sugiere homogeneidad en el tamaño de las secuencias, mientras que múltiples picos pueden indicar la presencia de diferentes tipos de secuencias o fragmentos. Los valores atípicos aparecen como barras aisladas en los extremos del gráfico."
+        "fast": True
     },
     {
         "id": "distribucion_gc",
         "name": "Distribución de Contenido GC", 
         "category": "Distribuciones Básicas",
         "description": "Distribución del porcentaje de contenido GC en las secuencias",
-        "technical_description": "Este gráfico de densidad muestra la distribución del contenido de guanina y citosina en las secuencias analizadas. La curva representa la frecuencia relativa de secuencias con diferentes porcentajes de composición GC. Un pico pronunciado indica que la mayoría de las secuencias tienen un contenido GC similar, mientras que una distribución amplia sugiere variabilidad composicional. Valores típicos para bacterias como Salmonella suelen estar entre 50-55%, mientras que Gallus puede mostrar diferentes patrones."
+        "fast": True
     },
     {
         "id": "frecuencia_codones",
         "name": "Frecuencia de Uso de Codones",
         "category": "Análisis de Codones", 
         "description": "Frecuencia relativa de uso de cada codón en las secuencias",
-        "technical_description": "Este gráfico de barras muestra la frecuencia de uso de cada uno de los 64 codones posibles en el conjunto de secuencias analizado. Cada barra representa un codón específico y su altura indica qué tan frecuentemente aparece en las secuencias. Codones con frecuencias notablemente más altas pueden indicar preferencias de uso específicas de la especie. Patrones similares entre Salmonella y Gallus sugieren conservación evolutiva, mientras diferencias marcadas pueden reflejar adaptaciones específicas."
+        "fast": True
     },
     {
         "id": "comparativa_codones",
         "name": "Comparativa de Uso de Codones",
         "category": "Análisis de Codones",
         "description": "Comparación del uso de codones entre las dos especies",
-        "technical_description": "Este gráfico de barras comparativas muestra las diferencias en el uso de codones entre Salmonella y Gallus. Para cada codón, se muestran dos barras adyacentes que representan su frecuencia en cada especie. Esto permite identificar visualmente codones que son preferidos por una especie sobre la otra. Diferencias significativas pueden indicar adaptaciones evolutivas, presiones de selección diferentes o optimizaciones traducionales específicas de cada organismo."
+        "fast": True
     },
     {
         "id": "correlacion_codones", 
         "name": "Correlación de Uso de Codones",
         "category": "Análisis de Codones",
         "description": "Análisis de correlación en el uso de codones entre especies",
-        "technical_description": "Este gráfico de dispersión examina la relación entre los patrones de uso de codones de Salmonella y Gallus. Cada punto representa un codón específico, con su posición en el eje X mostrando su frecuencia en Salmonella y en el eje Y su frecuencia en Gallus. Puntos cercanos a la línea diagonal indican uso similar entre especies, mientras desviaciones sugieren diferencias en preferencias. Una correlación fuerte sugiere conservación evolutiva en el uso de codones."
+        "fast": False
     },
     {
         "id": "boxplot_longitud",
         "name": "Distribución de Longitudes por Especie", 
         "category": "Comparativas Estadísticas",
         "description": "Comparación de distribuciones de longitud mediante diagramas de caja",
-        "technical_description": "Este diagrama de cajas compara las distribuciones de longitud de secuencias entre Salmonella y Gallus. Cada caja muestra la mediana (línea central), los cuartiles 25% y 75% (extremos de la caja), y el rango de valores normales (bigotes). Cajas que se superponen indican similitud en las distribuciones de longitud, mientras cajas separadas sugieren diferencias significativas. Valores atípicos individuales representan secuencias con longitudes excepcionales."
+        "fast": True
     },
     {
         "id": "pca",
         "name": "Análisis de Componentes Principales",
         "category": "Análisis Multivariado", 
         "description": "Reducción de dimensionalidad basada en patrones de uso de codones",
-        "technical_description": "Este gráfico de análisis de componentes principales (PCA) reduce la dimensionalidad de los datos de uso de codones a dos dimensiones para visualización. Cada punto representa una secuencia, y su posición está determinada por su perfil global de uso de codones. Agrupamientos de puntos indican similitudes en patrones de uso, sugiriendo relación evolutiva o funcional. La proximidad entre puntos de diferentes especies puede indicar transferencia horizontal de genes o convergencia evolutiva."
+        "fast": False
     },
     {
         "id": "heatmap",
         "name": "Mapa de Calor de Similitudes",
         "category": "Análisis Multivariado",
         "description": "Visualización de similitudes entre secuencias mediante gradientes de color",
-        "technical_description": "Este mapa de calor representa las similitudes entre secuencias mediante una matriz de colores. Cada celda muestra el grado de similitud entre dos secuencias, con tonos cálidos indicando alta similitud y tonos fríos baja similitud. Patrones de bloques a lo largo de la diagonal principal sugieren agrupamientos naturales de secuencias con características similares. La estructura del heatmap puede revelar relaciones filogenéticas o agrupamientos funcionales."
+        "fast": False
     },
     {
         "id": "scatter_gc_longitud",
         "name": "Relación GC vs Longitud",
         "category": "Análisis de Relaciones", 
         "description": "Análisis de la relación entre contenido GC y longitud de secuencias",
-        "technical_description": "Este gráfico de dispersión explora la posible relación entre el contenido de guanina-citosina y la longitud de las secuencias. Cada punto representa una secuencia individual, con coordenadas que reflejan su porcentaje GC y su longitud total. Una tendencia creciente sugiere correlación positiva, donde secuencias más largas tienden a tener mayor contenido GC, mientras una tendencia decreciente indica correlación negativa. La ausencia de patrón visible sugiere independencia entre estas variables."
+        "fast": True
     }
 ]
 
-# Diccionario rápido de descripciones
-CHART_DESCRIPTIONS = {chart["id"]: chart["technical_description"] for chart in AVAILABLE_CHARTS}
-
-def validar_archivo_fasta(archivo) -> Tuple[bool, Optional[str]]:
-    """Validación eficiente de archivos FASTA."""
-    if archivo is None:
-        return False, "Por favor, sube un archivo FASTA"
+# DICCIONARIO DE DESCRIPCIONES - CORREGIDO Y PRECISO
+CHART_DESCRIPTIONS = {
+    "histograma_longitud": "Este histograma muestra la distribución de longitudes de secuencias genéticas. El eje X representa los rangos de longitud y el eje Y la frecuencia de secuencias en cada rango. Permite identificar la longitud más común, variabilidad y valores atípicos en el conjunto de datos analizado.",
     
-    nombre_archivo = archivo.name.lower()
-    if not (nombre_archivo.endswith('.fa') or nombre_archivo.endswith('.fasta')):
-        return False, "El archivo debe tener extensión .fa o .fasta"
+    "distribucion_gc": "Este gráfico de densidad muestra la distribución del contenido de guanina y citosina (GC) en las secuencias. La curva representa la frecuencia de secuencias con diferentes porcentajes GC. Picos pronunciados indican concentración en valores específicos, útil para comparar composiciones genómicas.",
+    
+    "frecuencia_codones": "Gráfico de barras que muestra la frecuencia relativa de uso de cada codón. Cada barra representa uno de los 64 codones posibles, permitiendo identificar codones preferidos y patrones de uso específicos por especie.",
+    
+    "comparativa_codones": "Visualización comparativa que muestra el uso de codones entre Salmonella y Gallus mediante barras adyacentes. Facilita la identificación de diferencias en preferencias de codones entre especies.",
+    
+    "correlacion_codones": "Gráfico de dispersión que explora la correlación en el uso de codones entre especies. Cada punto representa un codón, mostrando su frecuencia en Salmonella vs Gallus. La línea diagonal indica correlación perfecta.",
+    
+    "boxplot_longitud": "Diagrama de cajas que compara distribuciones de longitud entre especies. Muestra medianas, cuartiles y valores extremos, permitiendo evaluar diferencias estadísticas en longitudes de secuencias.",
+    
+    "pca": "Análisis de Componentes Principales que reduce la dimensionalidad de datos de uso de codones. Los agrupamientos visibles sugieren similitudes en patrones evolutivos o funcionales entre secuencias.",
+    
+    "heatmap": "Mapa de calor que visualiza similitudes entre secuencias mediante colores. Tonos cálidos indican alta similitud, revelando patrones de agrupamiento y relaciones evolutivas.",
+    
+    "scatter_gc_longitud": "Gráfico de dispersión que examina la relación entre contenido GC y longitud de secuencias. Permite identificar correlaciones y patrones entre estas dos variables genómicas importantes."
+}
+
+def validar_archivo_fasta_rapido(archivo) -> Tuple[bool, Optional[str]]:
+    """Validación ultrarrápida de archivos FASTA."""
+    if archivo is None:
+        return False, "Archivo requerido"
+    
+    # Cache de validación
+    cache_key = f"{archivo.name}_{archivo.size}"
+    if cache_key in st.session_state.file_cache:
+        return st.session_state.file_cache[cache_key]
+    
+    # Validación rápida
+    nombre = archivo.name.lower()
+    if not (nombre.endswith('.fa') or nombre.endswith('.fasta')):
+        result = (False, "Extensión .fa o .fasta requerida")
+        st.session_state.file_cache[cache_key] = result
+        return result
     
     if archivo.size == 0:
-        return False, "El archivo está vacío"
+        result = (False, "Archivo vacío")
+        st.session_state.file_cache[cache_key] = result
+        return result
     
+    # Validación de formato rápido
     try:
-        primeros_bytes = archivo.read(100)
+        primeros_bytes = archivo.read(50)  # Solo leer 50 bytes para validar
         archivo.seek(0)
         if not primeros_bytes.startswith(b'>'):
-            return False, "El archivo no parece ser un FASTA válido (debe empezar con '>')"
+            result = (False, "Formato FASTA inválido")
+            st.session_state.file_cache[cache_key] = result
+            return result
     except Exception as e:
-        return False, f"Error al leer el archivo: {str(e)}"
+        result = (False, f"Error de lectura: {str(e)}")
+        st.session_state.file_cache[cache_key] = result
+        return result
     
-    return True, None
+    result = (True, None)
+    st.session_state.file_cache[cache_key] = result
+    return result
 
-def mostrar_seleccion_graficos():
-    """Interfaz de selección de gráficos organizada por categorías."""
-    st.markdown('<div class="section-header">Selección de Gráficos para Análisis</div>', unsafe_allow_html=True)
-    st.markdown("Selecciona los tipos de gráficos que deseas incluir en el análisis:")
+def procesamiento_ultra_rapido(salmonella_file, gallus_file):
+    """Procesamiento ultra rápido con paralelismo."""
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            future_sal = executor.submit(leer_archivo_rapido, salmonella_file)
+            future_gall = executor.submit(leer_archivo_rapido, gallus_file)
+            
+            salmonella_content = future_sal.result(timeout=15)  # Timeout más corto
+            gallus_content = future_gall.result(timeout=15)
+        
+        return salmonella_content, gallus_content
+        
+    except concurrent.futures.TimeoutError:
+        raise Exception("Timeout: Archivos demasiado grandes o lentos")
+    except Exception as e:
+        raise Exception(f"Error en procesamiento: {str(e)}")
+
+def leer_archivo_rapido(file):
+    """Lee archivo de manera ultra rápida."""
+    return file.read()
+
+def mostrar_seleccion_graficos_rapida():
+    """Selección rápida de gráficos con modo turbo."""
+    st.markdown('<div class="section-header">Selección Rápida de Gráficos</div>', unsafe_allow_html=True)
     
-    # Inicializar selección si está vacía
-    if not st.session_state.selected_charts:
-        st.session_state.selected_charts = [chart["id"] for chart in AVAILABLE_CHARTS]
+    # Modo turbo para máxima velocidad
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        modo_turbo = st.checkbox(
+            "🚀 Modo Turbo (Gráficos Rápidos)", 
+            value=True,
+            help="Selecciona automáticamente solo los gráficos de procesamiento más rápido"
+        )
     
-    # Organizar por categorías
+    if modo_turbo:
+        st.session_state.selected_charts = [chart["id"] for chart in AVAILABLE_CHARTS if chart["fast"]]
+        st.success("Modo Turbo activado: Procesamiento máximo velocidad")
+        return
+    
+    # Selección manual optimizada
     categorias = {}
     for chart in AVAILABLE_CHARTS:
         if chart["category"] not in categorias:
             categorias[chart["category"]] = []
         categorias[chart["category"]].append(chart)
     
-    # Mostrar selección por categorías
     for categoria, charts in categorias.items():
         st.markdown(f'<div class="category-header">{categoria}</div>', unsafe_allow_html=True)
         
         cols = st.columns(3)
-        col_idx = 0
-        
-        for chart in charts:
-            with cols[col_idx]:
+        for idx, chart in enumerate(charts):
+            with cols[idx % 3]:
                 selected = st.checkbox(
-                    f"**{chart['name']}**",
+                    chart["name"],
                     value=chart["id"] in st.session_state.selected_charts,
                     key=f"chart_{chart['id']}",
                     help=chart["description"]
                 )
                 
-                if selected and chart["id"] not in st.session_state.selected_charts:
-                    st.session_state.selected_charts.append(chart["id"])
-                elif not selected and chart["id"] in st.session_state.selected_charts:
-                    st.session_state.selected_charts.remove(chart["id"])
-            
-            col_idx = (col_idx + 1) % 3
-        
-        st.markdown("---")
+                if selected:
+                    if chart["id"] not in st.session_state.selected_charts:
+                        st.session_state.selected_charts.append(chart["id"])
+                else:
+                    if chart["id"] in st.session_state.selected_charts:
+                        st.session_state.selected_charts.remove(chart["id"])
 
-def procesamiento_paralelo_archivos(salmonella_file, gallus_file):
-    """Procesamiento paralelo de archivos para mayor velocidad."""
+def ejecutar_analisis_turbo(salmonella_file, gallus_file, params: Dict):
+    """Ejecuta análisis en modo turbo."""
     try:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-            future_sal = executor.submit(procesar_archivo_individual, salmonella_file)
-            future_gall = executor.submit(procesar_archivo_individual, gallus_file)
-            
-            salmonella_content = future_sal.result(timeout=30)
-            gallus_content = future_gall.result(timeout=30)
+        st.session_state.processing_start_time = time.time()
         
-        return salmonella_content, gallus_content
-        
-    except concurrent.futures.TimeoutError:
-        raise Exception("Timeout en el procesamiento de archivos")
-    except Exception as e:
-        raise Exception(f"Error en procesamiento paralelo: {str(e)}")
-
-def procesar_archivo_individual(file):
-    """Procesa un archivo individual de manera eficiente."""
-    return file.read()
-
-def ejecutar_analisis_optimizado(salmonella_file, gallus_file, params: Dict):
-    """Ejecuta el análisis de manera optimizada."""
-    try:
-        # Validación rápida
-        salmonella_valido, msg_sal = validar_archivo_fasta(salmonella_file)
-        gallus_valido, msg_gall = validar_archivo_fasta(gallus_file)
+        # Validación ultrarrápida
+        salmonella_valido, msg_sal = validar_archivo_fasta_rapido(salmonella_file)
+        gallus_valido, msg_gall = validar_archivo_fasta_rapido(gallus_file)
         
         if not salmonella_valido or not gallus_valido:
             raise ValueError(f"Salmonella: {msg_sal}, Gallus: {msg_gall}")
         
-        # Información del análisis
+        # Información rápida
         tamaño_sal = salmonella_file.size / (1024 * 1024)
         tamaño_gall = gallus_file.size / (1024 * 1024)
         num_charts = len(st.session_state.selected_charts)
         
-        st.write(f"**Información del análisis:**")
-        st.write(f"- Archivo Salmonella: {salmonella_file.name} ({tamaño_sal:.1f} MB)")
-        st.write(f"- Archivo Gallus: {gallus_file.name} ({tamaño_gall:.1f} MB)")
-        st.write(f"- Gráficos seleccionados: {num_charts}")
+        st.write(f"**Procesamiento Turbo:**")
+        st.write(f"- Archivos: {tamaño_sal:.1f}MB + {tamaño_gall:.1f}MB")
+        st.write(f"- Gráficos: {num_charts}")
         
-        # Procesamiento optimizado
-        with st.spinner("Procesando archivos FASTA..."):
-            salmonella_content, gallus_content = procesamiento_paralelo_archivos(
+        # Procesamiento ultra rápido
+        with st.spinner("Procesamiento turbo..."):
+            salmonella_content, gallus_content = procesamiento_ultra_rapido(
                 salmonella_file, gallus_file
             )
         
-        # Configurar parámetros
+        # Parámetros optimizados
         params['selected_charts'] = st.session_state.selected_charts
+        params['turbo_mode'] = True
         
         # Ejecutar análisis
         if st.session_state.analysis_client.mode == "API":
@@ -329,121 +374,111 @@ def ejecutar_analisis_optimizado(salmonella_file, gallus_file, params: Dict):
             st.session_state.analysis_status = resultado.get('status')
             st.session_state.analysis_results = resultado.get('results')
         
-        # Guardar estado
+        # Cache rápido
         st.session_state.last_params = {
             'salmonella_file': salmonella_file,
             'gallus_file': gallus_file,
             'params': params
         }
         
-        st.session_state.last_used_params = params.copy()
-        
-        # Historial
+        # Historial rápido
         st.session_state.execution_history.append({
-            'job_id': st.session_state.job_id or 'LOCAL',
-            'timestamp': time.strftime("%Y-%m-%d %H:%M:%S"),
-            'status': st.session_state.analysis_status
+            'timestamp': time.strftime("%H:%M:%S"),
+            'status': st.session_state.analysis_status,
+            'duration': time.time() - st.session_state.processing_start_time
         })
         
         return True
         
     except Exception as e:
-        st.session_state.error_message = str(e)
+        processing_time = time.time() - st.session_state.processing_start_time if st.session_state.processing_start_time else 0
+        st.session_state.error_message = f"Error en {processing_time:.1f}s: {str(e)}"
         st.session_state.analysis_status = 'FAILED'
-        st.error(f"Error en el análisis: {str(e)}")
+        st.error(f"Error: {str(e)}")
         return False
 
-def mostrar_graficos_con_descripciones(images: List):
-    """Muestra los gráficos con sus descripciones técnicas en orden correcto."""
-    st.markdown('<div class="section-header">Resultados Gráficos</div>', unsafe_allow_html=True)
+def mostrar_graficos_rapidos_con_descripciones(images: List):
+    """Muestra gráficos rápidos con descripciones correctas."""
+    st.markdown('<div class="section-header">Resultados Rápidos</div>', unsafe_allow_html=True)
     
     if not images:
-        st.info("No se generaron gráficos con la configuración actual")
+        st.info("No se generaron gráficos")
         return
     
-    # Crear mapeo CORRECTO entre imágenes y gráficos seleccionados
-    # Mantener el orden de selección del usuario
+    # Mapeo preciso entre imágenes y gráficos seleccionados
     chart_image_mapping = {}
-    selected_charts_ordered = [chart_id for chart_id in st.session_state.selected_charts 
-                              if chart_id in [c["id"] for c in AVAILABLE_CHARTS]]
-    
-    for i, chart_id in enumerate(selected_charts_ordered):
+    for i, chart_id in enumerate(st.session_state.selected_charts):
         if i < len(images):
             chart_image_mapping[chart_id] = images[i]
     
-    # Organizar por categorías para mejor presentación
-    categorias = {}
-    for chart_id in selected_charts_ordered:
-        if chart_id not in chart_image_mapping:
-            continue
-            
-        chart_info = next((c for c in AVAILABLE_CHARTS if c["id"] == chart_id), None)
-        if chart_info:
-            categoria = chart_info["category"]
-            if categoria not in categorias:
-                categorias[categoria] = []
-            categorias[categoria].append((chart_info, chart_image_mapping[chart_id]))
+    # Mostrar en grid rápido
+    charts_per_row = 2
+    chart_items = []
     
-    # Mostrar por categorías
-    for categoria, charts in categorias.items():
-        st.subheader(categoria)
+    for chart_id in st.session_state.selected_charts:
+        if chart_id in chart_image_mapping:
+            chart_info = next((c for c in AVAILABLE_CHARTS if c["id"] == chart_id), None)
+            if chart_info:
+                chart_items.append((chart_info, chart_image_mapping[chart_id]))
+    
+    # Mostrar en filas
+    for i in range(0, len(chart_items), charts_per_row):
+        row_items = chart_items[i:i + charts_per_row]
+        cols = st.columns(charts_per_row)
         
-        for chart_info, image_path in charts:
-            with st.container():
-                st.markdown(f'<div class="chart-container">', unsafe_allow_html=True)
-                st.markdown(f'<div class="chart-title">{chart_info["name"]}</div>', unsafe_allow_html=True)
-                
-                # Dos columnas: gráfico y descripción
-                col_grafico, col_desc = st.columns([1, 1])
-                
-                with col_grafico:
+        for idx, (chart_info, image_path) in enumerate(row_items):
+            with cols[idx]:
+                with st.container():
+                    st.markdown(f'<div class="chart-container">', unsafe_allow_html=True)
+                    st.markdown(f'<div class="chart-title">{chart_info["name"]}</div>', unsafe_allow_html=True)
+                    
+                    # Gráfico y descripción
                     try:
                         if st.session_state.analysis_client.mode == "API":
                             import requests
-                            response = requests.get(image_path, timeout=10)
+                            response = requests.get(image_path, timeout=5)
                             st.image(response.content, use_container_width=True)
                         else:
                             if Path(image_path).exists():
                                 st.image(image_path, use_container_width=True)
-                        st.caption(f"Gráfico: {chart_info['name']}")
                     except Exception as e:
-                        st.error(f"Error al cargar el gráfico: {e}")
-                
-                with col_desc:
+                        st.error(f"Error cargando gráfico: {e}")
+                    
+                    # DESCRIPCIÓN CORRECTA usando el diccionario
                     descripcion = CHART_DESCRIPTIONS.get(chart_info["id"], "Descripción no disponible.")
                     st.markdown(f'<div class="chart-description">{descripcion}</div>', unsafe_allow_html=True)
-                
-                st.markdown('</div>', unsafe_allow_html=True)
+                    
+                    st.markdown('</div>', unsafe_allow_html=True)
 
-def mostrar_resultados_completos(resultados: Dict):
-    """Muestra todos los resultados del análisis."""
-    st.markdown('<div class="section-header">Resultados del Análisis</div>', unsafe_allow_html=True)
+def mostrar_resultados_turbo(resultados: Dict):
+    """Muestra resultados en modo turbo."""
+    st.markdown('<div class="section-header">Resultados Rápidos</div>', unsafe_allow_html=True)
     
-    # Métricas y datos tabulares
+    # Métricas rápidas
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("Resumen de Métricas")
+        st.subheader("Métricas Principales")
         try:
             if st.session_state.analysis_client.mode == "API":
                 import requests
                 resumen_csv_url = resultados.get('resumen_csv_url')
-                response = requests.get(resumen_csv_url, timeout=10)
+                response = requests.get(resumen_csv_url, timeout=5)
                 df_metricas = pd.read_csv(io.StringIO(response.text))
             else:
                 df_metricas = pd.read_csv(resultados.get('resumen_csv_path'))
             
-            st.dataframe(df_metricas.head(30), use_container_width=True)
+            st.dataframe(df_metricas.head(15), use_container_width=True)
             
             csv_metricas = df_metricas.to_csv(index=False)
             st.download_button(
-                label="Descargar Resumen de Métricas",
+                label="Descargar Métricas",
                 data=csv_metricas,
-                file_name="resumen_metricas.csv",
+                file_name="metricas.csv",
                 mime="text/csv"
             )
         except Exception as e:
-            st.error(f"Error al cargar métricas: {e}")
+            st.error(f"Error métricas: {e}")
     
     with col2:
         st.subheader("Uso de Codones")
@@ -451,64 +486,44 @@ def mostrar_resultados_completos(resultados: Dict):
             if st.session_state.analysis_client.mode == "API":
                 import requests
                 codon_csv_url = resultados.get('codon_csv_url')
-                response = requests.get(codon_csv_url, timeout=10)
+                response = requests.get(codon_csv_url, timeout=5)
                 df_codones = pd.read_csv(io.StringIO(response.text))
             else:
                 df_codones = pd.read_csv(resultados.get('codon_csv_path'))
             
-            st.dataframe(df_codones.head(30), use_container_width=True)
+            st.dataframe(df_codones.head(15), use_container_width=True)
             
             csv_codones = df_codones.to_csv(index=False)
             st.download_button(
-                label="Descargar Uso de Codones",
+                label="Descargar Codones",
                 data=csv_codones,
-                file_name="codon_usage.csv",
+                file_name="codones.csv",
                 mime="text/csv"
             )
         except Exception as e:
-            st.error(f"Error al cargar datos de codones: {e}")
+            st.error(f"Error codones: {e}")
     
-    # Gráficos con descripciones en orden correcto
+    # Gráficos rápidos
     images = resultados.get('images', [])
-    mostrar_graficos_con_descripciones(images)
-    
-    # Descarga completa
-    st.subheader("Descarga de Resultados Completos")
-    try:
-        if st.session_state.analysis_client.mode == "API":
-            zip_url = resultados.get('zip_url')
-            if zip_url:
-                st.markdown(f"**[Descargar archivo ZIP con todos los resultados]({zip_url})**")
-        else:
-            resumen_csv_path = resultados.get('resumen_csv_path')
-            if resumen_csv_path:
-                resultados_dir = Path(resumen_csv_path).parent
-                zip_path = crear_zip_resultados(str(resultados_dir))
-                
-                if Path(zip_path).exists():
-                    with open(zip_path, 'rb') as f:
-                        st.download_button(
-                            label="Descargar ZIP Completo",
-                            data=f.read(),
-                            file_name="resultados_analisis.zip",
-                            mime="application/zip"
-                        )
-    except Exception as e:
-        st.error(f"Error al preparar descarga: {e}")
+    mostrar_graficos_rapidos_con_descripciones(images)
+
+def limpiar_cache():
+    """Limpia cache para máxima velocidad."""
+    if 'file_cache' in st.session_state:
+        st.session_state.file_cache.clear()
 
 def main():
-    """Aplicación principal con selección de gráficos y logo."""
+    """Aplicación principal ultra rápida."""
+    init_session_state()
     
-    # Logo centrado en la parte superior
+    # Header rápido
     logo_path = Path(__file__).parent / "assets" / "logo.png"
     
-    # Contenedor centrado para el logo
     if logo_path.exists():
         try:
             with open(logo_path, "rb") as img_file:
                 img_data = base64.b64encode(img_file.read()).decode()
             
-            # Mostrar logo centrado con HTML/CSS
             st.markdown(
                 f"""
                 <div style="text-align: center; width: 100%; margin: 1rem 0;">
@@ -517,198 +532,123 @@ def main():
                 """,
                 unsafe_allow_html=True
             )
-        except Exception as e:
-            # Si hay error cargando la imagen, usar st.image como fallback
+        except Exception:
             col1, col2, col3 = st.columns([1, 1, 1])
             with col2:
                 st.image(str(logo_path), width=150)
-    else:
-        # Si no hay logo, mostrar emoji como fallback
-        st.markdown(
-            "<div style='text-align: center; font-size: 3rem; margin-bottom: 1rem;'>🧬</div>", 
-            unsafe_allow_html=True
-        )
     
-    # Título y subtítulo centrados debajo del logo
-    st.markdown('<div class="main-header">SalmoAvianLight</div>', unsafe_allow_html=True)
-    st.markdown('<div class="subheader">Comparación de Secuencias: Salmonella vs Gallus</div>', 
-                unsafe_allow_html=True)
+    st.markdown('<div class="main-header">SalmoAvianLight Turbo</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subheader">Análisis Ultra Rápido de Secuencias</div>', unsafe_allow_html=True)
     
-    st.markdown("""
-    <div style="text-align: center; color: #888; margin-bottom: 2rem;">
-    Esta herramienta te permite analizar y comparar secuencias genéticas de dos especies.<br>
-    Sube tus archivos FASTA, define los parámetros y obtén resultados detallados en minutos.
-    </div>
-    """, unsafe_allow_html=True)
+    # Indicadores de velocidad
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.info("⚡ Procesamiento Turbo")
+    with col2:
+        st.info("🚀 Resultados Inmediatos")
+    with col3:
+        st.info("💾 Optimizado")
     
-    # Indicador de modo
-    modo = st.session_state.analysis_client.mode
-    if modo == "API":
-        st.info(f"Modo API: Conectado a {st.session_state.analysis_client.base_url}")
-    else:
-        st.info("Modo Local: Ejecutando análisis en este servidor")
-    
-    # Sección 1: Carga de archivos
-    st.markdown('<div class="section-header">Carga de Archivos FASTA</div>', unsafe_allow_html=True)
+    # Sección 1: Carga ultrarrápida
+    st.markdown('<div class="section-header">Carga Rápida de Archivos</div>', unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("Salmonella")
         salmonella_file = st.file_uploader(
-            "Selecciona el archivo FASTA de Salmonella",
+            "Salmonella FASTA",
             type=['fa', 'fasta'],
-            key="salmonella_uploader",
-            help="Archivo FASTA con secuencias de Salmonella"
+            key="salmonella_fast"
         )
         if salmonella_file:
-            tamaño_mb = salmonella_file.size / (1024 * 1024)
-            es_valido, mensaje = validar_archivo_fasta(salmonella_file)
-            if not es_valido:
-                st.error(f"Error: {mensaje}")
-            else:
-                st.success(f"Archivo válido: {salmonella_file.name} ({tamaño_mb:.1f} MB)")
+            es_valido, mensaje = validar_archivo_fasta_rapido(salmonella_file)
+            if es_valido:
+                tamaño_mb = salmonella_file.size / (1024 * 1024)
+                st.success(f"✅ {salmonella_file.name} ({tamaño_mb:.1f}MB)")
     
     with col2:
-        st.subheader("Gallus")
         gallus_file = st.file_uploader(
-            "Selecciona el archivo FASTA de Gallus",
+            "Gallus FASTA", 
             type=['fa', 'fasta'],
-            key="gallus_uploader",
-            help="Archivo FASTA con secuencias de Gallus"
+            key="gallus_fast"
         )
         if gallus_file:
-            tamaño_mb = gallus_file.size / (1024 * 1024)
-            es_valido, mensaje = validar_archivo_fasta(gallus_file)
-            if not es_valido:
-                st.error(f"Error: {mensaje}")
-            else:
-                st.success(f"Archivo válido: {gallus_file.name} ({tamaño_mb:.1f} MB)")
+            es_valido, mensaje = validar_archivo_fasta_rapido(gallus_file)
+            if es_valido:
+                tamaño_mb = gallus_file.size / (1024 * 1024)
+                st.success(f"✅ {gallus_file.name} ({tamaño_mb:.1f}MB)")
     
-    # Sección 2: Selección de gráficos
-    mostrar_seleccion_graficos()
+    # Sección 2: Configuración turbo
+    st.markdown('<div class="section-header">Configuración Rápida</div>', unsafe_allow_html=True)
     
-    # Sección 3: Parámetros de análisis
-    st.markdown('<div class="section-header">Parámetros de Análisis</div>', unsafe_allow_html=True)
+    mostrar_seleccion_graficos_rapida()
     
+    # Parámetros rápidos
     col1, col2, col3 = st.columns(3)
-    
     with col1:
-        limpiar_ns = st.checkbox(
-            "Normalizar/limpiar Ns",
-            value=True,
-            help="Elimina o normaliza caracteres N en las secuencias"
-        )
-    
+        min_len = st.number_input("Long. mínima", value=0)
     with col2:
-        min_len = st.number_input(
-            "Longitud mínima por secuencia",
-            min_value=0,
-            value=0,
-            step=1,
-            help="Filtra secuencias con longitud menor a este valor"
-        )
-    
+        limpiar_ns = st.checkbox("Limpiar Ns", value=True)
     with col3:
-        top_codons = st.slider(
-            "Top codones para análisis",
-            min_value=5,
-            max_value=30,
-            value=20,
-            step=1,
-            help="Número de codones a incluir en análisis comparativos"
-        )
+        top_codons = st.slider("Top codones", 5, 30, 15)
     
-    params = {
-        'limpiar_ns': limpiar_ns,
-        'min_len': min_len,
-        'top_codons': top_codons
-    }
+    params = {'min_len': min_len, 'limpiar_ns': limpiar_ns, 'top_codons': top_codons}
     
-    # Sección 4: Ejecución
-    st.markdown('<div class="section-header">Ejecución del Análisis</div>', unsafe_allow_html=True)
+    # Sección 3: Ejecución turbo
+    st.markdown('<div class="section-header">Ejecución Turbo</div>', unsafe_allow_html=True)
     
     ejecutar_btn = st.button(
-        "Ejecutar Análisis",
+        "🚀 EJECUTAR ANÁLISIS TURBO", 
         type="primary",
         use_container_width=True,
-        disabled=(salmonella_file is None or gallus_file is None)
+        disabled=not (salmonella_file and gallus_file)
     )
     
     if ejecutar_btn:
-        if salmonella_file and gallus_file:
-            # Validación final
-            salmonella_valido, msg_sal = validar_archivo_fasta(salmonella_file)
-            gallus_valido, msg_gall = validar_archivo_fasta(gallus_file)
-            
-            if not salmonella_valido:
-                st.error(f"Error en archivo Salmonella: {msg_sal}")
-            elif not gallus_valido:
-                st.error(f"Error en archivo Gallus: {msg_gall}")
-            else:
-                # Limpiar estado anterior
-                st.session_state.analysis_results = None
-                st.session_state.analysis_status = None
-                st.session_state.error_message = None
-                
-                # Ejecutar análisis
-                with st.spinner("Iniciando análisis..."):
-                    if ejecutar_analisis_optimizado(salmonella_file, gallus_file, params):
-                        st.success("Análisis iniciado correctamente")
-                        st.rerun()
-                    else:
-                        st.error(f"Error al ejecutar análisis: {st.session_state.error_message}")
+        # Limpieza rápida
+        limpiar_cache()
+        st.session_state.analysis_results = None
+        st.session_state.analysis_status = None
+        st.session_state.error_message = None
+        
+        # Ejecución turbo
+        with st.spinner("Iniciando análisis turbo..."):
+            if ejecutar_analisis_turbo(salmonella_file, gallus_file, params):
+                st.success("✅ Análisis iniciado - Procesando...")
+                st.rerun()
     
-    # Sección 5: Resultados
+    # Sección 4: Resultados rápidos
     if st.session_state.analysis_status:
-        st.markdown('<div class="section-header">Estado del Análisis</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">Progreso</div>', unsafe_allow_html=True)
         
         status = st.session_state.analysis_status
         
         if status == 'SUBMITTED':
-            st.info("Análisis enviado. Esperando procesamiento...")
-        
+            st.info("En cola...")
         elif status == 'RUNNING':
-            st.info("Análisis en progreso...")
-            st.progress(0.5)
-        
+            st.info("Procesando...")
+            st.progress(0.7)
         elif status == 'COMPLETED':
-            st.success("Análisis completado exitosamente")
+            st.success("✅ Completado!")
             
-            # Obtener resultados si estamos en modo API
             if st.session_state.analysis_client.mode == "API" and st.session_state.job_id:
                 try:
                     resultados = st.session_state.analysis_client.get_results(st.session_state.job_id)
                     st.session_state.analysis_results = resultados
                 except Exception as e:
-                    st.error(f"Error al obtener resultados: {e}")
-                    st.session_state.analysis_results = None
+                    st.error(f"Error resultados: {e}")
             
-            # Mostrar resultados
             if st.session_state.analysis_results:
-                mostrar_resultados_completos(st.session_state.analysis_results)
-            else:
-                st.warning("Los resultados no están disponibles aún.")
+                mostrar_resultados_turbo(st.session_state.analysis_results)
         
         elif status == 'FAILED':
-            st.error("El análisis falló")
+            st.error("❌ Error")
             if st.session_state.error_message:
-                st.error(f"Error: {st.session_state.error_message}")
-            
-            if st.session_state.last_params:
-                if st.button("Reintentar análisis"):
-                    st.session_state.analysis_status = None
-                    st.session_state.error_message = None
-                    st.rerun()
+                st.error(st.session_state.error_message)
     
-    # Footer
-    st.markdown("---")
-    st.markdown("""
-    <div style="text-align: center; color: #888; font-size: 0.9rem;">
-    Herramienta de Análisis Genético - Salmonella vs Gallus<br>
-    Para analistas de laboratorio
-    </div>
-    """, unsafe_allow_html=True)
+    # Limpieza automática
+    if len(st.session_state.file_cache) > 20:
+        limpiar_cache()
 
 if __name__ == "__main__":
     main()
