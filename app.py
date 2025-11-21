@@ -1,6 +1,6 @@
 """
-Frontend Web para SalmoAvianLight - Versión Final Ultra Rápida
-Con descripciones específicas y cache optimizado
+Frontend Web para SalmoAvianLight - Versión Corregida
+Orden correcto de gráficos y carga ultra rápida
 """
 import streamlit as st
 import pandas as pd
@@ -393,7 +393,7 @@ def ejecutar_analisis_turbo(salmonella_file, gallus_file, params: Dict):
         return False
 
 def mostrar_graficos_rapidos_con_descripciones(images: List):
-    """Muestra gráficos rápidos con descripciones correctas usando cache"""
+    """Muestra gráficos en el ORDEN CORRECTO de selección del usuario"""
     st.markdown('<div class="section-header">📊 Resultados Gráficos Generados</div>', unsafe_allow_html=True)
     
     if not images:
@@ -404,25 +404,21 @@ def mostrar_graficos_rapidos_con_descripciones(images: List):
     available_charts = get_available_charts()
     chart_descriptions = get_chart_descriptions()
     
-    # Mapeo preciso entre imágenes y gráficos seleccionados
-    chart_image_mapping = {}
+    # CORRECCIÓN: Crear mapeo directo entre gráficos seleccionados e imágenes
+    # Asumimos que el backend devuelve las imágenes en el mismo orden que los gráficos seleccionados
+    chart_image_pairs = []
+    
     for i, chart_id in enumerate(st.session_state.selected_charts):
         if i < len(images):
-            chart_image_mapping[chart_id] = images[i]
-    
-    # Mostrar en grid rápido
-    charts_per_row = 2
-    chart_items = []
-    
-    for chart_id in st.session_state.selected_charts:
-        if chart_id in chart_image_mapping:
             chart_info = next((c for c in available_charts if c["id"] == chart_id), None)
             if chart_info:
-                chart_items.append((chart_info, chart_image_mapping[chart_id]))
+                chart_image_pairs.append((chart_info, images[i]))
     
-    # Mostrar en filas
-    for i in range(0, len(chart_items), charts_per_row):
-        row_items = chart_items[i:i + charts_per_row]
+    # Mostrar en el ORDEN CORRECTO de selección
+    charts_per_row = 2
+    
+    for i in range(0, len(chart_image_pairs), charts_per_row):
+        row_items = chart_image_pairs[i:i + charts_per_row]
         cols = st.columns(charts_per_row)
         
         for idx, (chart_info, image_path) in enumerate(row_items):
@@ -502,7 +498,7 @@ def mostrar_resultados_turbo(resultados: Dict):
         except Exception as e:
             st.error(f"Error cargando datos de codones: {e}")
     
-    # Gráficos rápidos
+    # Gráficos rápidos en ORDEN CORRECTO
     images = resultados.get('images', [])
     mostrar_graficos_rapidos_con_descripciones(images)
 
