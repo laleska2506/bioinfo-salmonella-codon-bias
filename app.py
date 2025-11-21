@@ -1,5 +1,5 @@
 """
-Frontend Web para SalmoAvianLight - Versión Corregida
+Frontend Web para SalmoAvianLight - Versión Sin Prefijos GF
 Coincidencia exacta con los gráficos generados por visualizacion.py
 """
 import streamlit as st
@@ -92,7 +92,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# MAESTRO DE GRÁFICOS - COINCIDENCIA EXACTA CON visualizacion.py
+# MAESTRO DE GRÁFICOS - COINCIDENCIA EXACTA CON visualizacion.py (sin prefijos GF en frontend)
 CHART_MASTER = {
     "distribucion_longitudes": {
         "id": "GF5",
@@ -177,23 +177,23 @@ def get_available_charts():
 def get_chart_descriptions():
     """Descripciones que coinciden con los gráficos reales generados"""
     return {
-        "DESC_GF1": "Distribución del Contenido GC en Gallus - Muestra la frecuencia de los valores de contenido GC específicamente en las secuencias de Gallus. Permite identificar patrones composicionales característicos de la especie aviar, mostrando si existe un rango preferido de contenido GC y la variabilidad composicional del genoma.",
+        "DESC_GF1": "**Distribución del Contenido GC en Gallus** - Muestra la frecuencia de los valores de contenido GC específicamente en las secuencias de Gallus. Permite identificar patrones composicionales característicos de la especie aviar, mostrando si existe un rango preferido de contenido GC y la variabilidad composicional del genoma.",
         
-        "DESC_GF2": "Distribución del Contenido GC en Salmonella - Analiza la composición nucleotídica específica de las secuencias de Salmonella. Revela sesgos genómicos característicos de bacterias y permite identificar la distribución particular del contenido GC en este organismo, mostrando posibles adaptaciones evolutivas en su composición genética.",
+        "DESC_GF2": "**Distribución del Contenido GC en Salmonella** - Analiza la composición nucleotídica específica de las secuencias de Salmonella. Revela sesgos genómicos característicos de bacterias y permite identificar la distribución particular del contenido GC en este organismo, mostrando posibles adaptaciones evolutivas en su composición genética.",
         
-        "DESC_GF3": "Distribución General del Contenido GC - Histograma que muestra la distribución global del contenido GC combinando ambas especies. Proporciona una visión general de la composición nucleotídica del conjunto de datos completo, identificando modas y rangos predominantes de contenido GC sin distinción de especie.",
+        "DESC_GF3": "**Distribución General del Contenido GC** - Histograma que muestra la distribución global del contenido GC combinando ambas especies. Proporciona una visión general de la composición nucleotídica del conjunto de datos completo, identificando modas y rangos predominantes de contenido GC sin distinción de especie.",
         
-        "DESC_GF4": "Distribución Acumulativa de Longitudes de Genes - Gráfico de distribución acumulativa que muestra la proporción de genes por debajo de cierta longitud. Incluye marcadores de percentiles (25%, 50%, 75%, 90%) que permiten identificar valores de referencia para el tamaño génico en el conjunto de datos analizado.",
+        "DESC_GF4": "**Distribución Acumulativa de Longitudes de Genes** - Gráfico de distribución acumulativa que muestra la proporción de genes por debajo de cierta longitud. Incluye marcadores de percentiles (25%, 50%, 75%, 90%) que permiten identificar valores de referencia para el tamaño génico en el conjunto de datos analizado.",
         
-        "DESC_GF5": "Distribución de Longitudes de Secuencias - Histograma detallado de la distribución de longitudes de todas las secuencias analizadas. Muestra la frecuencia de diferentes tamaños de genes, permitiendo identificar si existen picos específicos, distribución normal o sesgos en el tamaño de las secuencias génicas.",
+        "DESC_GF5": "**Distribución de Longitudes de Secuencias** - Histograma detallado de la distribución de longitudes de todas las secuencias analizadas. Muestra la frecuencia de diferentes tamaños de genes, permitiendo identificar si existen picos específicos, distribución normal o sesgos en el tamaño de las secuencias génicas.",
         
-        "DESC_GF6": "Top 20 Codones Más Frecuentes - Gráfico de barras comparativo que muestra los 20 codones con mayor frecuencia de uso en ambas especies. Permite identificar visualmente las preferencias codonales de cada organismo y comparar directamente cuáles codones son más utilizados en Salmonella versus Gallus.",
+        "DESC_GF6": "**Top 20 Codones Más Frecuentes** - Gráfico de barras comparativo que muestra los 20 codones con mayor frecuencia de uso en ambas especies. Permite identificar visualmente las preferencias codonales de cada organismo y comparar directamente cuáles codones son más utilizados en Salmonella versus Gallus.",
         
-        "DESC_GF7": "Correlación del Uso de Codones - Gráfico de dispersión que compara la frecuencia de uso de cada codón entre Salmonella y Gallus. La línea diagonal representa la correlación perfecta. Permite evaluar si existen patrones de uso similares o divergentes entre las especies a nivel de cada codón específico.",
+        "DESC_GF7": "**Correlación del Uso de Codones** - Gráfico de dispersión que compara la frecuencia de uso de cada codón entre Salmonella y Gallus. La línea diagonal representa la correlación perfecta. Permite evaluar si existen patrones de uso similares o divergentes entre las especies a nivel de cada codón específico.",
         
-        "DESC_GF8": "Heatmap de Uso de Codones en Salmonella - Representación matricial del uso de codones organizado por familias. El mapa de calor utiliza colores para indicar la intensidad de uso de cada codón, permitiendo identificar patrones grupales y preferencias en la utilización del código genético en Salmonella.",
+        "DESC_GF8": "**Heatmap de Uso de Codones en Salmonella** - Representación matricial del uso de codones organizado por familias. El mapa de calor utiliza colores para indicar la intensidad de uso de cada codón, permitiendo identificar patrones grupales y preferencias en la utilización del código genético en Salmonella.",
         
-        "DESC_GF9": "Relación entre Longitud y Contenido GC - Diagrama de dispersión que explora la posible correlación entre el tamaño de las secuencias y su composición GC. Utiliza densidad de color para mostrar concentraciones de puntos, revelando si genes más largos tienden a tener composiciones GC específicas o si no existe relación aparente."
+        "DESC_GF9": "**Relación entre Longitud y Contenido GC** - Diagrama de dispersión que explora la posible correlación entre el tamaño de las secuencias y su composición GC. Utiliza densidad de color para mostrar concentraciones de puntos, revelando si genes más largos tienden a tener composiciones GC específicas o si no existe relación aparente."
     }
 
 def init_session_state():
@@ -244,7 +244,7 @@ def validar_archivo_fasta(archivo) -> Tuple[bool, Optional[str]]:
     return True, None
 
 def mostrar_seleccion_graficos():
-    """Selección de gráficos que COINCIDEN con visualizacion.py"""
+    """Selección de gráficos sin prefijos GF"""
     st.markdown('<div class="section-header">Selección de Gráficos para Análisis</div>', unsafe_allow_html=True)
     
     available_charts = get_available_charts()
@@ -262,7 +262,7 @@ def mostrar_seleccion_graficos():
         
         for chart in charts:
             selected = st.checkbox(
-                chart["name"],
+                chart["name"],  # Ya no incluye prefijo GF
                 value=chart["id"] in st.session_state.selected_charts,
                 key=f"chart_{chart['id']}",
                 help=chart["description"]
@@ -304,7 +304,7 @@ def ejecutar_analisis(salmonella_file, gallus_file, params: Dict):
             # Configurar parámetros
             params['selected_charts'] = st.session_state.selected_charts
             
-            # Ejecutar análisis - ESTO DEBE GENERAR LOS GRÁFICOS SEGÚN visualizacion.py
+            # Ejecutar análisis
             st.write("Ejecutando análisis genético...")
             if st.session_state.analysis_client.mode == "API":
                 resultado = st.session_state.analysis_client.start_analysis(
@@ -315,7 +315,6 @@ def ejecutar_analisis(salmonella_file, gallus_file, params: Dict):
                 st.session_state.job_id = resultado.get('jobId')
                 st.session_state.analysis_status = 'SUBMITTED'
             else:
-                # Modo local - esto debe disparar la generación de gráficos según visualizacion.py
                 resultado = st.session_state.analysis_client.start_analysis(
                     salmonella_content,
                     gallus_content,
@@ -345,7 +344,7 @@ def ejecutar_analisis(salmonella_file, gallus_file, params: Dict):
         return False
 
 def mostrar_graficos_correspondientes(resultados: Dict):
-    """Muestra gráficos que COINCIDEN EXACTAMENTE con los generados por visualizacion.py"""
+    """Muestra gráficos sin prefijos GF en los títulos"""
     st.markdown('<div class="section-header">Resultados Gráficos Generados</div>', unsafe_allow_html=True)
     
     available_charts = get_available_charts()
@@ -365,7 +364,7 @@ def mostrar_graficos_correspondientes(resultados: Dict):
         
         with st.container():
             st.markdown(f'<div class="chart-container">', unsafe_allow_html=True)
-            st.markdown(f'<div class="chart-title">{chart_info["name"]}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="chart-title">{chart_info["name"]}</div>', unsafe_allow_html=True)  # Sin prefijo GF
             
             # Mostrar gráfico - buscar la imagen en los resultados
             try:
@@ -402,7 +401,7 @@ def mostrar_graficos_correspondientes(resultados: Dict):
             st.markdown('</div>', unsafe_allow_html=True)
 
 def mostrar_resultados(resultados: Dict):
-    """Muestra todos los resultados con gráficos correspondientes"""
+    """Muestra todos los resultados con gráficos sin prefijos GF"""
     st.markdown('<div class="section-header">Resultados del Análisis</div>', unsafe_allow_html=True)
     
     # Métricas y datos
@@ -464,7 +463,7 @@ def mostrar_resultados(resultados: Dict):
         except Exception as e:
             st.error(f"Error cargando datos de codones: {e}")
     
-    # Gráficos que COINCIDEN con visualizacion.py
+    # Gráficos sin prefijos GF
     mostrar_graficos_correspondientes(resultados)
 
 def interfaz_carga_archivos():
@@ -521,7 +520,7 @@ def interfaz_carga_archivos():
     return salmonella_file, gallus_file
 
 def main():
-    """Aplicación principal corregida - COINCIDE con visualizacion.py"""
+    """Aplicación principal sin prefijos GF en la interfaz"""
     init_session_state()
     
     # Header
