@@ -1,6 +1,6 @@
 """
-Frontend Web para SalmoAvianLight - Versión Corregida
-Gráficos y descripciones exactas con carga ultra rápida
+Frontend Web para SalmoAvianLight - CONEXIÓN DIRECTA CORREGIDA
+Conexión exacta con visualization.py y carga ultra rápida
 """
 import streamlit as st
 import pandas as pd
@@ -18,8 +18,28 @@ import base64
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
+# Importación directa del sistema de visualización
 from services.analysis_client import AnalysisClient
 from utils.zipper import crear_zip_resultados
+
+# CONEXIÓN DIRECTA: Importar funciones de visualización específicas
+try:
+    # Importar las funciones exactas de visualization.py
+    from visualization import (
+        grafico_gc,
+        distribucion_longitudes,
+        distribucion_gc,
+        relacion_longitud_gc,
+        uso_codones_top20,
+        correlacion_codones,
+        heatmap_codones,
+        distribucion_acumulativa_longitudes,
+        generar_todos_los_graficos
+    )
+    VISUALIZATION_AVAILABLE = True
+except ImportError as e:
+    st.error(f"Error importando módulos de visualización: {e}")
+    VISUALIZATION_AVAILABLE = False
 
 # Configuración de la página para máximo rendimiento
 st.set_page_config(
@@ -116,7 +136,9 @@ def get_available_charts():
             "category": "Distribuciones de GC",
             "description": "Distribución del contenido GC en Gallus",
             "fast": True,
-            "desc_id": "DESCRIPCION_G1"
+            "desc_id": "DESCRIPCION_G1",
+            "image_file": "gallus_gc.png",
+            "function": "grafico_gc_gallus"
         },
         {
             "id": "GF2",
@@ -124,7 +146,9 @@ def get_available_charts():
             "category": "Distribuciones de GC",
             "description": "Distribución del contenido GC en Salmonella",
             "fast": True,
-            "desc_id": "DESCRIPCION_G2"
+            "desc_id": "DESCRIPCION_G2",
+            "image_file": "salmonella_gc.png",
+            "function": "grafico_gc_salmonella"
         },
         {
             "id": "GF3",
@@ -132,7 +156,9 @@ def get_available_charts():
             "category": "Distribuciones de GC", 
             "description": "Comparativa de distribución GC entre especies",
             "fast": True,
-            "desc_id": "DESCRIPCION_G3"
+            "desc_id": "DESCRIPCION_G3",
+            "image_file": "comparativa_gc.png",
+            "function": "grafico_gc_comparativa"
         },
         {
             "id": "GF4",
@@ -140,7 +166,9 @@ def get_available_charts():
             "category": "Distribuciones de Longitud",
             "description": "Distribución acumulativa de longitudes génicas", 
             "fast": True,
-            "desc_id": "DESCRIPCION_G4"
+            "desc_id": "DESCRIPCION_G4",
+            "image_file": "distribucion_acumulativa_longitudes.png",
+            "function": "distribucion_acumulativa_longitudes"
         },
         {
             "id": "GF5", 
@@ -148,7 +176,9 @@ def get_available_charts():
             "category": "Distribuciones de Longitud",
             "description": "Distribución general de longitudes de secuencias",
             "fast": True,
-            "desc_id": "DESCRIPCION_G5"
+            "desc_id": "DESCRIPCION_G5",
+            "image_file": "distribucion_longitudes.png",
+            "function": "distribucion_longitudes"
         },
         {
             "id": "GF6",
@@ -156,7 +186,9 @@ def get_available_charts():
             "category": "Análisis de Codones",
             "description": "Comparación de codones más frecuentes entre especies",
             "fast": True,
-            "desc_id": "DESCRIPCION_G6"
+            "desc_id": "DESCRIPCION_G6",
+            "image_file": "uso_codones_top15.png",
+            "function": "uso_codones_top15"
         },
         {
             "id": "GF7",
@@ -164,7 +196,9 @@ def get_available_charts():
             "category": "Análisis de Codones", 
             "description": "Correlación en uso de codones entre especies",
             "fast": False,
-            "desc_id": "DESCRIPCION_G7"
+            "desc_id": "DESCRIPCION_G7",
+            "image_file": "correlacion_codones.png",
+            "function": "correlacion_codones"
         },
         {
             "id": "GF8", 
@@ -172,7 +206,9 @@ def get_available_charts():
             "category": "Análisis de Codones",
             "description": "Heatmap de uso de codones específico para Salmonella",
             "fast": False,
-            "desc_id": "DESCRIPCION_G8"
+            "desc_id": "DESCRIPCION_G8",
+            "image_file": "heatmap_codones.png",
+            "function": "heatmap_codones"
         },
         {
             "id": "GF9",
@@ -180,7 +216,9 @@ def get_available_charts():
             "category": "Análisis de Relaciones", 
             "description": "Relación entre longitud de secuencias y contenido GC",
             "fast": True,
-            "desc_id": "DESCRIPCION_G9"
+            "desc_id": "DESCRIPCION_G9",
+            "image_file": "relacion_longitud_gc.png",
+            "function": "relacion_longitud_gc"
         }
     ]
 
@@ -220,7 +258,9 @@ def init_session_state():
         'last_used_params': None,
         'selected_charts': [],
         'file_cache': {},
-        'processing_start_time': None
+        'processing_start_time': None,
+        'uploaded_files': {},
+        'fasta_data': {}
     }
     
     for key, value in defaults.items():
@@ -261,6 +301,12 @@ def procesamiento_ultra_rapido(salmonella_file, gallus_file):
             
             salmonella_content = future_sal.result(timeout=10)
             gallus_content = future_gall.result(timeout=10)
+        
+        # Cache de datos para reutilización
+        st.session_state.fasta_data = {
+            'salmonella': salmonella_content,
+            'gallus': gallus_content
+        }
         
         return salmonella_content, gallus_content
         
@@ -310,6 +356,38 @@ def mostrar_seleccion_graficos_rapida():
                     if chart["id"] in st.session_state.selected_charts:
                         st.session_state.selected_charts.remove(chart["id"])
 
+def ejecutar_visualizacion_directa():
+    """Ejecuta visualización DIRECTA usando visualization.py"""
+    try:
+        st.info("Ejecutando generación de gráficos locales...")
+        
+        # Asegurar que existe la carpeta de resultados
+        os.makedirs("results/graficos", exist_ok=True)
+        
+        # Ejecutar la función principal de visualización
+        if VISUALIZATION_AVAILABLE:
+            generar_todos_los_graficos()
+            
+            # Verificar que los gráficos se generaron
+            graficos_generados = []
+            available_charts = get_available_charts()
+            
+            for chart in available_charts:
+                ruta_grafico = f"results/graficos/{chart['image_file']}"
+                if os.path.exists(ruta_grafico):
+                    graficos_generados.append(ruta_grafico)
+            
+            return {
+                'status': 'COMPLETED',
+                'images': graficos_generados,
+                'message': f'Generados {len(graficos_generados)} gráficos exitosamente'
+            }
+        else:
+            raise Exception("Módulo de visualización no disponible")
+            
+    except Exception as e:
+        raise Exception(f"Error en visualización directa: {str(e)}")
+
 def ejecutar_analisis_turbo(salmonella_file, gallus_file, params: Dict):
     """Ejecuta análisis en modo turbo"""
     try:
@@ -341,8 +419,13 @@ def ejecutar_analisis_turbo(salmonella_file, gallus_file, params: Dict):
         # Parámetros optimizados
         params['selected_charts'] = st.session_state.selected_charts
         
-        # Ejecutar análisis
-        if st.session_state.analysis_client.mode == "API":
+        # EJECUCIÓN DIRECTA: Usar visualization.py directamente
+        if st.session_state.analysis_client.mode == "LOCAL":
+            resultado = ejecutar_visualizacion_directa()
+            st.session_state.analysis_status = resultado.get('status')
+            st.session_state.analysis_results = resultado
+        else:
+            # Modo API (mantener funcionalidad existente)
             resultado = st.session_state.analysis_client.start_analysis(
                 salmonella_content,
                 gallus_content,
@@ -350,14 +433,6 @@ def ejecutar_analisis_turbo(salmonella_file, gallus_file, params: Dict):
             )
             st.session_state.job_id = resultado.get('jobId')
             st.session_state.analysis_status = 'SUBMITTED'
-        else:
-            resultado = st.session_state.analysis_client.start_analysis(
-                salmonella_content,
-                gallus_content,
-                params
-            )
-            st.session_state.analysis_status = resultado.get('status')
-            st.session_state.analysis_results = resultado.get('results')
         
         # Cache rápido
         st.session_state.last_params = {
@@ -367,10 +442,11 @@ def ejecutar_analisis_turbo(salmonella_file, gallus_file, params: Dict):
         }
         
         # Historial rápido
+        processing_time = time.time() - st.session_state.processing_start_time
         st.session_state.execution_history.append({
             'timestamp': time.strftime("%H:%M:%S"),
             'status': st.session_state.analysis_status,
-            'duration': time.time() - st.session_state.processing_start_time
+            'duration': processing_time
         })
         
         return True
@@ -394,20 +470,32 @@ def mostrar_graficos_rapidos_con_descripciones(images: List):
     available_charts = get_available_charts()
     chart_descriptions = get_chart_descriptions()
     
-    # CORRECCIÓN: Crear mapeo directo entre gráficos seleccionados e imágenes
+    # CORRECCIÓN CRÍTICA: Mapeo exacto entre gráficos seleccionados e imágenes generadas
     chart_image_pairs = []
     
-    for i, chart_id in enumerate(st.session_state.selected_charts):
-        if i < len(images):
-            chart_info = next((c for c in available_charts if c["id"] == chart_id), None)
-            if chart_info:
-                chart_image_pairs.append((chart_info, images[i]))
+    # Crear mapeo de archivos de imagen a información de gráfico
+    image_file_to_chart = {chart["image_file"]: chart for chart in available_charts}
+    
+    # Para cada imagen generada, encontrar el gráfico correspondiente
+    for image_path in images:
+        image_file = os.path.basename(image_path)
+        chart_info = image_file_to_chart.get(image_file)
+        if chart_info:
+            chart_image_pairs.append((chart_info, image_path))
+    
+    # ORDENAR por el orden de selección del usuario
+    ordered_pairs = []
+    for chart_id in st.session_state.selected_charts:
+        for chart_info, image_path in chart_image_pairs:
+            if chart_info["id"] == chart_id:
+                ordered_pairs.append((chart_info, image_path))
+                break
     
     # Mostrar en el ORDEN CORRECTO de selección
     charts_per_row = 2
     
-    for i in range(0, len(chart_image_pairs), charts_per_row):
-        row_items = chart_image_pairs[i:i + charts_per_row]
+    for i in range(0, len(ordered_pairs), charts_per_row):
+        row_items = ordered_pairs[i:i + charts_per_row]
         cols = st.columns(charts_per_row)
         
         for idx, (chart_info, image_path) in enumerate(row_items):
@@ -418,13 +506,10 @@ def mostrar_graficos_rapidos_con_descripciones(images: List):
                     
                     # Gráfico
                     try:
-                        if st.session_state.analysis_client.mode == "API":
-                            import requests
-                            response = requests.get(image_path, timeout=5)
-                            st.image(response.content, use_container_width=True)
+                        if os.path.exists(image_path):
+                            st.image(image_path, use_container_width=True)
                         else:
-                            if Path(image_path).exists():
-                                st.image(image_path, use_container_width=True)
+                            st.warning(f"Archivo no encontrado: {image_path}")
                     except Exception as e:
                         st.error(f"Error cargando gráfico: {e}")
                     
@@ -444,46 +529,40 @@ def mostrar_resultados_turbo(resultados: Dict):
     with col1:
         st.subheader("Resumen de Métricas")
         try:
-            if st.session_state.analysis_client.mode == "API":
-                import requests
-                resumen_csv_url = resultados.get('resumen_csv_url')
-                response = requests.get(resumen_csv_url, timeout=5)
-                df_metricas = pd.read_csv(io.StringIO(response.text))
+            # Cargar métricas desde archivo local
+            if os.path.exists("results/resumen_metricas.csv"):
+                df_metricas = pd.read_csv("results/resumen_metricas.csv")
+                st.dataframe(df_metricas.head(15), use_container_width=True)
+                
+                csv_metricas = df_metricas.to_csv(index=False)
+                st.download_button(
+                    label="Descargar Métricas",
+                    data=csv_metricas,
+                    file_name="metricas.csv",
+                    mime="text/csv"
+                )
             else:
-                df_metricas = pd.read_csv(resultados.get('resumen_csv_path'))
-            
-            st.dataframe(df_metricas.head(15), use_container_width=True)
-            
-            csv_metricas = df_metricas.to_csv(index=False)
-            st.download_button(
-                label="Descargar Métricas",
-                data=csv_metricas,
-                file_name="metricas.csv",
-                mime="text/csv"
-            )
+                st.warning("Archivo de métricas no disponible")
         except Exception as e:
             st.error(f"Error cargando métricas: {e}")
     
     with col2:
         st.subheader("Uso de Codones")
         try:
-            if st.session_state.analysis_client.mode == "API":
-                import requests
-                codon_csv_url = resultados.get('codon_csv_url')
-                response = requests.get(codon_csv_url, timeout=5)
-                df_codones = pd.read_csv(io.StringIO(response.text))
+            # Cargar datos de codones desde archivo local
+            if os.path.exists("results/codon_usage.csv"):
+                df_codones = pd.read_csv("results/codon_usage.csv")
+                st.dataframe(df_codones.head(15), use_container_width=True)
+                
+                csv_codones = df_codones.to_csv(index=False)
+                st.download_button(
+                    label="Descargar Codones",
+                    data=csv_codones,
+                    file_name="codones.csv",
+                    mime="text/csv"
+                )
             else:
-                df_codones = pd.read_csv(resultados.get('codon_csv_path'))
-            
-            st.dataframe(df_codones.head(15), use_container_width=True)
-            
-            csv_codones = df_codones.to_csv(index=False)
-            st.download_button(
-                label="Descargar Codones",
-                data=csv_codones,
-                file_name="codones.csv",
-                mime="text/csv"
-            )
+                st.warning("Archivo de codones no disponible")
         except Exception as e:
             st.error(f"Error cargando datos de codones: {e}")
     
@@ -492,7 +571,7 @@ def mostrar_resultados_turbo(resultados: Dict):
     mostrar_graficos_rapidos_con_descripciones(images)
 
 def main():
-    """Aplicación principal ultra rápida con cache"""
+    """Aplicación principal ultra rápida con conexión directa"""
     init_session_state()
     
     # Header rápido
@@ -536,6 +615,7 @@ def main():
             if es_valido:
                 tamaño_mb = salmonella_file.size / (1024 * 1024)
                 st.success(f"Archivo válido: {salmonella_file.name} ({tamaño_mb:.1f}MB)")
+                st.session_state.uploaded_files['salmonella'] = salmonella_file
             else:
                 st.error(f"Error: {mensaje}")
     
@@ -551,6 +631,7 @@ def main():
             if es_valido:
                 tamaño_mb = gallus_file.size / (1024 * 1024)
                 st.success(f"Archivo válido: {gallus_file.name} ({tamaño_mb:.1f}MB)")
+                st.session_state.uploaded_files['gallus'] = gallus_file
             else:
                 st.error(f"Error: {mensaje}")
     
@@ -608,13 +689,6 @@ def main():
             st.progress(0.7)
         elif status == 'COMPLETED':
             st.success("Análisis completado exitosamente!")
-            
-            if st.session_state.analysis_client.mode == "API" and st.session_state.job_id:
-                try:
-                    resultados = st.session_state.analysis_client.get_results(st.session_state.job_id)
-                    st.session_state.analysis_results = resultados
-                except Exception as e:
-                    st.error(f"Error obteniendo resultados: {e}")
             
             if st.session_state.analysis_results:
                 mostrar_resultados_turbo(st.session_state.analysis_results)
