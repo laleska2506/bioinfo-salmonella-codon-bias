@@ -1,6 +1,6 @@
 """
-Frontend Web para SalmoAvianLight - Versión Ultra Rápida
-Optimizado para máxima velocidad con descripciones precisas
+Frontend Web para SalmoAvianLight - Versión Ultra Rápida con Cache
+Optimizado con st.cache_data para máxima velocidad
 """
 import streamlit as st
 import pandas as pd
@@ -32,7 +32,6 @@ st.set_page_config(
 # Estilos CSS optimizados
 st.markdown("""
     <style>
-    /* Estilo para centrar el logo */
     .logo-wrapper {
         display: flex;
         justify-content: center;
@@ -101,16 +100,114 @@ st.markdown("""
     .stButton button {
         width: 100%;
     }
-    /* Reducir animaciones */
-    .stProgress > div > div > div > div {
-        background-color: #1f77b4;
-    }
     /* Asegurar que el logo esté centrado */
     div[data-testid="stMarkdownContainer"]:has(.logo-wrapper) {
         text-align: center;
     }
     </style>
 """, unsafe_allow_html=True)
+
+# CACHE PARA MÁXIMA VELOCIDAD
+@st.cache_data(ttl=3600)
+def get_available_charts():
+    """Cache de la lista de gráficos disponibles"""
+    return [
+        {
+            "id": "histograma_longitud",
+            "name": "Histograma de Longitudes", 
+            "category": "Distribuciones Básicas",
+            "description": "Distribución de frecuencias de longitudes de secuencias",
+            "fast": True,
+            "desc_id": "DESCRIPCION_G1"
+        },
+        {
+            "id": "distribucion_gc",
+            "name": "Distribución de Contenido GC", 
+            "category": "Distribuciones Básicas",
+            "description": "Distribución del porcentaje de contenido GC en las secuencias",
+            "fast": True,
+            "desc_id": "DESCRIPCION_G2"
+        },
+        {
+            "id": "frecuencia_codones",
+            "name": "Frecuencia de Uso de Codones",
+            "category": "Análisis de Codones", 
+            "description": "Frecuencia relativa de uso de cada codón en las secuencias",
+            "fast": True,
+            "desc_id": "DESCRIPCION_G3"
+        },
+        {
+            "id": "comparativa_codones",
+            "name": "Comparativa de Uso de Codones",
+            "category": "Análisis de Codones",
+            "description": "Comparación del uso de codones entre las dos especies", 
+            "fast": True,
+            "desc_id": "DESCRIPCION_G4"
+        },
+        {
+            "id": "correlacion_codones", 
+            "name": "Correlación de Uso de Codones",
+            "category": "Análisis de Codones",
+            "description": "Análisis de correlación en el uso de codones entre especies",
+            "fast": False,
+            "desc_id": "DESCRIPCION_G5"
+        },
+        {
+            "id": "boxplot_longitud",
+            "name": "Distribución de Longitudes por Especie", 
+            "category": "Comparativas Estadísticas",
+            "description": "Comparación de distribuciones de longitud mediante diagramas de caja",
+            "fast": True,
+            "desc_id": "DESCRIPCION_G6"
+        },
+        {
+            "id": "pca",
+            "name": "Análisis de Componentes Principales",
+            "category": "Análisis Multivariado", 
+            "description": "Reducción de dimensionalidad basada en patrones de uso de codones",
+            "fast": False,
+            "desc_id": "DESCRIPCION_G7"
+        },
+        {
+            "id": "heatmap", 
+            "name": "Mapa de Calor de Similitudes",
+            "category": "Análisis Multivariado",
+            "description": "Visualización de similitudes entre secuencias mediante gradientes de color",
+            "fast": False,
+            "desc_id": "DESCRIPCION_G8"
+        },
+        {
+            "id": "scatter_gc_longitud",
+            "name": "Relación GC vs Longitud",
+            "category": "Análisis de Relaciones", 
+            "description": "Análisis de la relación entre contenido GC y longitud de secuencias",
+            "fast": True,
+            "desc_id": "DESCRIPCION_G9"
+        }
+    ]
+
+@st.cache_data(ttl=3600) 
+def get_chart_descriptions():
+    """Cache del diccionario de descripciones con IDs específicos"""
+    return {
+        "DESCRIPCION_G1": "Este histograma muestra la distribución de longitudes de secuencias genéticas. El eje X representa los rangos de longitud y el eje Y la frecuencia de secuencias en cada rango. Permite identificar la longitud más común, variabilidad y valores atípicos en el conjunto de datos analizado.",
+        
+        "DESCRIPCION_G2": "Este gráfico de densidad muestra la distribución del contenido de guanina y citosina (GC) en las secuencias. La curva representa la frecuencia de secuencias con diferentes porcentajes GC. Picos pronunciados indican concentración en valores específicos, útil para comparar composiciones genómicas.",
+        
+        "DESCRIPCION_G3": "Gráfico de barras que muestra la frecuencia relativa de uso de cada codón. Cada barra representa uno de los 64 codones posibles, permitiendo identificar codones preferidos y patrones de uso específicos por especie.",
+        
+        "DESCRIPCION_G4": "Visualización comparativa que muestra el uso de codones entre Salmonella y Gallus mediante barras adyacentes. Facilita la identificación de diferencias en preferencias de codones entre especies.",
+        
+        "DESCRIPCION_G5": "Gráfico de dispersión que explora la correlación en el uso de codones entre especies. Cada punto representa un codón, mostrando su frecuencia en Salmonella vs Gallus. La línea diagonal indica correlación perfecta.",
+        
+        "DESCRIPCION_G6": "Diagrama de cajas que compara distribuciones de longitud entre especies. Muestra medianas, cuartiles y valores extremos, permitiendo evaluar diferencias estadísticas en longitudes de secuencias.",
+        
+        "DESCRIPCION_G7": "Análisis de Componentes Principales que reduce la dimensionalidad de datos de uso de codones. Los agrupamientos visibles sugieren similitudes en patrones evolutivos o funcionales entre secuencias.",
+        
+        "DESCRIPCION_G8": "Mapa de calor que visualiza similitudes entre secuencias mediante colores. Tonos cálidos indican alta similitud, revelando patrones de agrupamiento y relaciones evolutivas.",
+        
+        "DESCRIPCION_G9": "Gráfico de dispersión que examina la relación entre contenido GC y longitud de secuencias. Permite identificar correlaciones y patrones entre estas dos variables genómicas importantes."
+    }
 
 # Inicialización del session state optimizada
 def init_session_state():
@@ -131,94 +228,6 @@ def init_session_state():
     for key, value in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = value
-
-# Configuración de gráficos disponibles
-AVAILABLE_CHARTS = [
-    {
-        "id": "histograma_longitud",
-        "name": "Histograma de Longitudes",
-        "category": "Distribuciones Básicas",
-        "description": "Distribución de frecuencias de longitudes de secuencias",
-        "fast": True
-    },
-    {
-        "id": "distribucion_gc",
-        "name": "Distribución de Contenido GC", 
-        "category": "Distribuciones Básicas",
-        "description": "Distribución del porcentaje de contenido GC en las secuencias",
-        "fast": True
-    },
-    {
-        "id": "frecuencia_codones",
-        "name": "Frecuencia de Uso de Codones",
-        "category": "Análisis de Codones", 
-        "description": "Frecuencia relativa de uso de cada codón en las secuencias",
-        "fast": True
-    },
-    {
-        "id": "comparativa_codones",
-        "name": "Comparativa de Uso de Codones",
-        "category": "Análisis de Codones",
-        "description": "Comparación del uso de codones entre las dos especies",
-        "fast": True
-    },
-    {
-        "id": "correlacion_codones", 
-        "name": "Correlación de Uso de Codones",
-        "category": "Análisis de Codones",
-        "description": "Análisis de correlación en el uso de codones entre especies",
-        "fast": False
-    },
-    {
-        "id": "boxplot_longitud",
-        "name": "Distribución de Longitudes por Especie", 
-        "category": "Comparativas Estadísticas",
-        "description": "Comparación de distribuciones de longitud mediante diagramas de caja",
-        "fast": True
-    },
-    {
-        "id": "pca",
-        "name": "Análisis de Componentes Principales",
-        "category": "Análisis Multivariado", 
-        "description": "Reducción de dimensionalidad basada en patrones de uso de codones",
-        "fast": False
-    },
-    {
-        "id": "heatmap",
-        "name": "Mapa de Calor de Similitudes",
-        "category": "Análisis Multivariado",
-        "description": "Visualización de similitudes entre secuencias mediante gradientes de color",
-        "fast": False
-    },
-    {
-        "id": "scatter_gc_longitud",
-        "name": "Relación GC vs Longitud",
-        "category": "Análisis de Relaciones", 
-        "description": "Análisis de la relación entre contenido GC y longitud de secuencias",
-        "fast": True
-    }
-]
-
-# DICCIONARIO DE DESCRIPCIONES - CORREGIDO Y PRECISO
-CHART_DESCRIPTIONS = {
-    "histograma_longitud": "Este histograma muestra la distribución de longitudes de secuencias genéticas. El eje X representa los rangos de longitud y el eje Y la frecuencia de secuencias en cada rango. Permite identificar la longitud más común, variabilidad y valores atípicos en el conjunto de datos analizado.",
-    
-    "distribucion_gc": "Este gráfico de densidad muestra la distribución del contenido de guanina y citosina (GC) en las secuencias. La curva representa la frecuencia de secuencias con diferentes porcentajes GC. Picos pronunciados indican concentración en valores específicos, útil para comparar composiciones genómicas.",
-    
-    "frecuencia_codones": "Gráfico de barras que muestra la frecuencia relativa de uso de cada codón. Cada barra representa uno de los 64 codones posibles, permitiendo identificar codones preferidos y patrones de uso específicos por especie.",
-    
-    "comparativa_codones": "Visualización comparativa que muestra el uso de codones entre Salmonella y Gallus mediante barras adyacentes. Facilita la identificación de diferencias en preferencias de codones entre especies.",
-    
-    "correlacion_codones": "Gráfico de dispersión que explora la correlación en el uso de codones entre especies. Cada punto representa un codón, mostrando su frecuencia en Salmonella vs Gallus. La línea diagonal indica correlación perfecta.",
-    
-    "boxplot_longitud": "Diagrama de cajas que compara distribuciones de longitud entre especies. Muestra medianas, cuartiles y valores extremos, permitiendo evaluar diferencias estadísticas en longitudes de secuencias.",
-    
-    "pca": "Análisis de Componentes Principales que reduce la dimensionalidad de datos de uso de codones. Los agrupamientos visibles sugieren similitudes en patrones evolutivos o funcionales entre secuencias.",
-    
-    "heatmap": "Mapa de calor que visualiza similitudes entre secuencias mediante colores. Tonos cálidos indican alta similitud, revelando patrones de agrupamiento y relaciones evolutivas.",
-    
-    "scatter_gc_longitud": "Gráfico de dispersión que examina la relación entre contenido GC y longitud de secuencias. Permite identificar correlaciones y patrones entre estas dos variables genómicas importantes."
-}
 
 def validar_archivo_fasta_rapido(archivo) -> Tuple[bool, Optional[str]]:
     """Validación ultrarrápida de archivos FASTA."""
@@ -244,7 +253,7 @@ def validar_archivo_fasta_rapido(archivo) -> Tuple[bool, Optional[str]]:
     
     # Validación de formato rápido
     try:
-        primeros_bytes = archivo.read(50)  # Solo leer 50 bytes para validar
+        primeros_bytes = archivo.read(50)
         archivo.seek(0)
         if not primeros_bytes.startswith(b'>'):
             result = (False, "Formato FASTA inválido")
@@ -266,13 +275,13 @@ def procesamiento_ultra_rapido(salmonella_file, gallus_file):
             future_sal = executor.submit(leer_archivo_rapido, salmonella_file)
             future_gall = executor.submit(leer_archivo_rapido, gallus_file)
             
-            salmonella_content = future_sal.result(timeout=15)  # Timeout más corto
+            salmonella_content = future_sal.result(timeout=15)
             gallus_content = future_gall.result(timeout=15)
         
         return salmonella_content, gallus_content
         
     except concurrent.futures.TimeoutError:
-        raise Exception("Timeout: Archivos demasiado grandes o lentos")
+        raise Exception("Timeout: Archivos demasiado grandes")
     except Exception as e:
         raise Exception(f"Error en procesamiento: {str(e)}")
 
@@ -281,26 +290,27 @@ def leer_archivo_rapido(file):
     return file.read()
 
 def mostrar_seleccion_graficos_rapida():
-    """Selección rápida de gráficos con modo turbo."""
+    """Selección rápida de gráficos con datos cacheados."""
     st.markdown('<div class="section-header">Selección Rápida de Gráficos</div>', unsafe_allow_html=True)
     
+    # Obtener datos cacheados
+    available_charts = get_available_charts()
+    
     # Modo turbo para máxima velocidad
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        modo_turbo = st.checkbox(
-            "🚀 Modo Turbo (Gráficos Rápidos)", 
-            value=True,
-            help="Selecciona automáticamente solo los gráficos de procesamiento más rápido"
-        )
+    modo_turbo = st.checkbox(
+        "🚀 Modo Turbo (Gráficos Rápidos)", 
+        value=True,
+        help="Selecciona automáticamente solo los gráficos de procesamiento más rápido"
+    )
     
     if modo_turbo:
-        st.session_state.selected_charts = [chart["id"] for chart in AVAILABLE_CHARTS if chart["fast"]]
+        st.session_state.selected_charts = [chart["id"] for chart in available_charts if chart["fast"]]
         st.success("Modo Turbo activado: Procesamiento máximo velocidad")
         return
     
     # Selección manual optimizada
     categorias = {}
-    for chart in AVAILABLE_CHARTS:
+    for chart in available_charts:
         if chart["category"] not in categorias:
             categorias[chart["category"]] = []
         categorias[chart["category"]].append(chart)
@@ -398,12 +408,16 @@ def ejecutar_analisis_turbo(salmonella_file, gallus_file, params: Dict):
         return False
 
 def mostrar_graficos_rapidos_con_descripciones(images: List):
-    """Muestra gráficos rápidos con descripciones correctas."""
+    """Muestra gráficos rápidos con descripciones correctas usando cache."""
     st.markdown('<div class="section-header">Resultados Rápidos</div>', unsafe_allow_html=True)
     
     if not images:
         st.info("No se generaron gráficos")
         return
+    
+    # Obtener datos cacheados
+    available_charts = get_available_charts()
+    chart_descriptions = get_chart_descriptions()
     
     # Mapeo preciso entre imágenes y gráficos seleccionados
     chart_image_mapping = {}
@@ -417,7 +431,7 @@ def mostrar_graficos_rapidos_con_descripciones(images: List):
     
     for chart_id in st.session_state.selected_charts:
         if chart_id in chart_image_mapping:
-            chart_info = next((c for c in AVAILABLE_CHARTS if c["id"] == chart_id), None)
+            chart_info = next((c for c in available_charts if c["id"] == chart_id), None)
             if chart_info:
                 chart_items.append((chart_info, chart_image_mapping[chart_id]))
     
@@ -432,7 +446,7 @@ def mostrar_graficos_rapidos_con_descripciones(images: List):
                     st.markdown(f'<div class="chart-container">', unsafe_allow_html=True)
                     st.markdown(f'<div class="chart-title">{chart_info["name"]}</div>', unsafe_allow_html=True)
                     
-                    # Gráfico y descripción
+                    # Gráfico
                     try:
                         if st.session_state.analysis_client.mode == "API":
                             import requests
@@ -444,8 +458,8 @@ def mostrar_graficos_rapidos_con_descripciones(images: List):
                     except Exception as e:
                         st.error(f"Error cargando gráfico: {e}")
                     
-                    # DESCRIPCIÓN CORRECTA usando el diccionario
-                    descripcion = CHART_DESCRIPTIONS.get(chart_info["id"], "Descripción no disponible.")
+                    # DESCRIPCIÓN CORRECTA usando el diccionario cacheados
+                    descripcion = chart_descriptions.get(chart_info["desc_id"], "Descripción no disponible.")
                     st.markdown(f'<div class="chart-description">{descripcion}</div>', unsafe_allow_html=True)
                     
                     st.markdown('</div>', unsafe_allow_html=True)
@@ -513,7 +527,7 @@ def limpiar_cache():
         st.session_state.file_cache.clear()
 
 def main():
-    """Aplicación principal ultra rápida."""
+    """Aplicación principal ultra rápida con cache."""
     init_session_state()
     
     # Header rápido
@@ -547,7 +561,7 @@ def main():
     with col2:
         st.info("🚀 Resultados Inmediatos")
     with col3:
-        st.info("💾 Optimizado")
+        st.info("💾 Optimizado con Cache")
     
     # Sección 1: Carga ultrarrápida
     st.markdown('<div class="section-header">Carga Rápida de Archivos</div>', unsafe_allow_html=True)
