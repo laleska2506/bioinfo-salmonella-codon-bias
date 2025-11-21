@@ -96,7 +96,7 @@ st.markdown("""
 CHART_MASTER = {
     "distribucion_longitudes": {
         "id": "GF5",
-        "name": "GF5 - Distribución de Longitudes de Secuencias",
+        "name": "Distribución de Longitudes de Secuencias",
         "category": "Distribuciones Básicas",
         "description": "Histograma de distribución de longitudes de secuencias",
         "filename": "distribucion_longitudes.png",
@@ -104,7 +104,7 @@ CHART_MASTER = {
     },
     "distribucion_gc": {
         "id": "GF3", 
-        "name": "GF3 - Distribución del Contenido de GC",
+        "name": "Distribución del Contenido de GC",
         "category": "Distribuciones Básicas",
         "description": "Distribución general del contenido GC",
         "filename": "distribucion_gc.png",
@@ -112,7 +112,7 @@ CHART_MASTER = {
     },
     "relacion_longitud_gc": {
         "id": "GF9",
-        "name": "GF9 - Relación entre Longitud y Contenido de GC", 
+        "name": "Relación entre Longitud y Contenido de GC", 
         "category": "Análisis de Relaciones",
         "description": "Gráfico de dispersión entre longitud y contenido GC",
         "filename": "relacion_longitud_gc.png",
@@ -120,7 +120,7 @@ CHART_MASTER = {
     },
     "uso_codones_top20": {
         "id": "GF6",
-        "name": "GF6 - Top 20 Codones Más Frecuentes",
+        "name": "Top 20 Codones Más Frecuentes",
         "category": "Análisis de Codones",
         "description": "Comparación de los 20 codones más frecuentes entre especies",
         "filename": "uso_codones_top20.png", 
@@ -128,7 +128,7 @@ CHART_MASTER = {
     },
     "correlacion_codones": {
         "id": "GF7",
-        "name": "GF7 - Correlación del Uso de Codones",
+        "name": "Correlación del Uso de Codones",
         "category": "Análisis de Codones",
         "description": "Correlación entre uso de codones de Salmonella y Gallus",
         "filename": "correlacion_codones.png",
@@ -136,7 +136,7 @@ CHART_MASTER = {
     },
     "heatmap_codones": {
         "id": "GF8",
-        "name": "GF8 - Heatmap de Uso de Codones en Salmonella", 
+        "name": "Heatmap de Uso de Codones en Salmonella", 
         "category": "Análisis de Codones",
         "description": "Heatmap organizado por familias de codones",
         "filename": "heatmap_codones.png",
@@ -144,7 +144,7 @@ CHART_MASTER = {
     },
     "distribucion_acumulativa_longitudes": {
         "id": "GF4",
-        "name": "GF4 - Distribución Acumulativa de Longitudes de Genes",
+        "name": "Distribución Acumulativa de Longitudes de Genes",
         "category": "Distribuciones Avanzadas", 
         "description": "Distribución acumulativa con percentiles marcados",
         "filename": "distribucion_acumulativa_longitudes.png",
@@ -152,7 +152,7 @@ CHART_MASTER = {
     },
     "gallus_gc": {
         "id": "GF1",
-        "name": "GF1 - Distribución del Contenido GC (Gallus)",
+        "name": "Distribución del Contenido GC (Gallus)",
         "category": "Distribuciones por Especie", 
         "description": "Distribución específica de contenido GC en Gallus",
         "filename": "gallus_gc.png",
@@ -160,7 +160,7 @@ CHART_MASTER = {
     },
     "salmonella_gc": {
         "id": "GF2",
-        "name": "GF2 - Distribución del Contenido GC (Salmonella)",
+        "name": "Distribución del Contenido GC (Salmonella)",
         "category": "Distribuciones por Especie",
         "description": "Distribución específica de contenido GC en Salmonella", 
         "filename": "salmonella_gc.png",
@@ -177,23 +177,23 @@ def get_available_charts():
 def get_chart_descriptions():
     """Descripciones que coinciden con los gráficos reales generados"""
     return {
-        "DESC_GF1": "**Distribución del Contenido GC en Gallus** - Muestra la frecuencia de los valores de contenido GC específicamente en las secuencias de Gallus. Permite identificar patrones composicionales característicos de la especie aviar, mostrando si existe un rango preferido de contenido GC y la variabilidad composicional del genoma.",
+        "DESC_GF1": "Distribución del Contenido GC en Gallus - Muestra la frecuencia de los valores de contenido GC específicamente en las secuencias de Gallus. Permite identificar patrones composicionales característicos de la especie aviar, mostrando si existe un rango preferido de contenido GC y la variabilidad composicional del genoma.",
         
-        "DESC_GF2": "**Distribución del Contenido GC en Salmonella** - Analiza la composición nucleotídica específica de las secuencias de Salmonella. Revela sesgos genómicos característicos de bacterias y permite identificar la distribución particular del contenido GC en este organismo, mostrando posibles adaptaciones evolutivas en su composición genética.",
+        "DESC_GF2": "Distribución del Contenido GC en Salmonella - Analiza la composición nucleotídica específica de las secuencias de Salmonella. Revela sesgos genómicos característicos de bacterias y permite identificar la distribución particular del contenido GC en este organismo, mostrando posibles adaptaciones evolutivas en su composición genética.",
         
-        "DESC_GF3": "**Distribución General del Contenido GC** - Histograma que muestra la distribución global del contenido GC combinando ambas especies. Proporciona una visión general de la composición nucleotídica del conjunto de datos completo, identificando modas y rangos predominantes de contenido GC sin distinción de especie.",
+        "DESC_GF3": "Distribución General del Contenido GC - Histograma que muestra la distribución global del contenido GC combinando ambas especies. Proporciona una visión general de la composición nucleotídica del conjunto de datos completo, identificando modas y rangos predominantes de contenido GC sin distinción de especie.",
         
-        "DESC_GF4": "**Distribución Acumulativa de Longitudes de Genes** - Gráfico de distribución acumulativa que muestra la proporción de genes por debajo de cierta longitud. Incluye marcadores de percentiles (25%, 50%, 75%, 90%) que permiten identificar valores de referencia para el tamaño génico en el conjunto de datos analizado.",
+        "DESC_GF4": "Distribución Acumulativa de Longitudes de Genes - Gráfico de distribución acumulativa que muestra la proporción de genes por debajo de cierta longitud. Incluye marcadores de percentiles (25%, 50%, 75%, 90%) que permiten identificar valores de referencia para el tamaño génico en el conjunto de datos analizado.",
         
-        "DESC_GF5": "**Distribución de Longitudes de Secuencias** - Histograma detallado de la distribución de longitudes de todas las secuencias analizadas. Muestra la frecuencia de diferentes tamaños de genes, permitiendo identificar si existen picos específicos, distribución normal o sesgos en el tamaño de las secuencias génicas.",
+        "DESC_GF5": "Distribución de Longitudes de Secuencias - Histograma detallado de la distribución de longitudes de todas las secuencias analizadas. Muestra la frecuencia de diferentes tamaños de genes, permitiendo identificar si existen picos específicos, distribución normal o sesgos en el tamaño de las secuencias génicas.",
         
-        "DESC_GF6": "**Top 20 Codones Más Frecuentes** - Gráfico de barras comparativo que muestra los 20 codones con mayor frecuencia de uso en ambas especies. Permite identificar visualmente las preferencias codonales de cada organismo y comparar directamente cuáles codones son más utilizados en Salmonella versus Gallus.",
+        "DESC_GF6": "Top 20 Codones Más Frecuentes - Gráfico de barras comparativo que muestra los 20 codones con mayor frecuencia de uso en ambas especies. Permite identificar visualmente las preferencias codonales de cada organismo y comparar directamente cuáles codones son más utilizados en Salmonella versus Gallus.",
         
-        "DESC_GF7": "**Correlación del Uso de Codones** - Gráfico de dispersión que compara la frecuencia de uso de cada codón entre Salmonella y Gallus. La línea diagonal representa la correlación perfecta. Permite evaluar si existen patrones de uso similares o divergentes entre las especies a nivel de cada codón específico.",
+        "DESC_GF7": "Correlación del Uso de Codones - Gráfico de dispersión que compara la frecuencia de uso de cada codón entre Salmonella y Gallus. La línea diagonal representa la correlación perfecta. Permite evaluar si existen patrones de uso similares o divergentes entre las especies a nivel de cada codón específico.",
         
-        "DESC_GF8": "**Heatmap de Uso de Codones en Salmonella** - Representación matricial del uso de codones organizado por familias. El mapa de calor utiliza colores para indicar la intensidad de uso de cada codón, permitiendo identificar patrones grupales y preferencias en la utilización del código genético en Salmonella.",
+        "DESC_GF8": "Heatmap de Uso de Codones en Salmonella - Representación matricial del uso de codones organizado por familias. El mapa de calor utiliza colores para indicar la intensidad de uso de cada codón, permitiendo identificar patrones grupales y preferencias en la utilización del código genético en Salmonella.",
         
-        "DESC_GF9": "**Relación entre Longitud y Contenido GC** - Diagrama de dispersión que explora la posible correlación entre el tamaño de las secuencias y su composición GC. Utiliza densidad de color para mostrar concentraciones de puntos, revelando si genes más largos tienden a tener composiciones GC específicas o si no existe relación aparente."
+        "DESC_GF9": "Relación entre Longitud y Contenido GC - Diagrama de dispersión que explora la posible correlación entre el tamaño de las secuencias y su composición GC. Utiliza densidad de color para mostrar concentraciones de puntos, revelando si genes más largos tienden a tener composiciones GC específicas o si no existe relación aparente."
     }
 
 def init_session_state():
