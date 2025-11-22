@@ -36,8 +36,36 @@ def cargar_secuencias(ruta_archivo):
     
     secuencias = []
     try:
-        # Intentar parsear el archivo FASTA
-        registros = list(SeqIO.parse(ruta_archivo, "fasta"))
+        # Intentar detectar y manejar la codificación del archivo
+        # Primero intentamos con UTF-8, luego con otras codificaciones comunes
+        codificaciones = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1']
+        archivo_parseado = False
+        
+        for encoding in codificaciones:
+            try:
+                # Abrir el archivo con la codificación especificada y parsearlo
+                with open(ruta_archivo, 'r', encoding=encoding) as f:
+                    registros = list(SeqIO.parse(f, "fasta"))
+                    archivo_parseado = True
+                    break
+            except UnicodeDecodeError:
+                # Intentar con la siguiente codificación
+                continue
+            except Exception:
+                # Si es otro tipo de error, intentar con la siguiente codificación
+                continue
+        
+        # Si no se pudo parsear con ninguna codificación, intentar con el método por defecto
+        if not archivo_parseado:
+            try:
+                registros = list(SeqIO.parse(ruta_archivo, "fasta"))
+            except UnicodeDecodeError as e:
+                # Error de codificación - proporcionar mensaje claro
+                raise ValueError(
+                    "El archivo contiene caracteres especiales (como acentos, ñ, etc.) que no se pueden leer correctamente. "
+                    "Por favor, guarde el archivo en formato UTF-8 o ASCII antes de subirlo. "
+                    "Puede hacer esto abriendo el archivo en un editor de texto y guardándolo como 'UTF-8' o 'ASCII'."
+                )
         
         # Verificar que se encontraron secuencias
         if len(registros) == 0:
@@ -54,15 +82,30 @@ def cargar_secuencias(ruta_archivo):
         print(f" Cargadas {len(secuencias)} secuencias desde {ruta_archivo}")
         
     except ValueError as e:
-        # Re-lanzar ValueError con mensaje descriptivo
-        raise ValueError(f"Error al procesar el archivo FASTA: {str(e)}")
+        # Re-lanzar ValueError con mensaje descriptivo (ya incluye mensajes claros)
+        raise
+    except UnicodeDecodeError as e:
+        # Error de codificación - proporcionar mensaje claro y útil
+        raise ValueError(
+            "El archivo contiene caracteres especiales (como acentos, ñ, etc.) que no se pueden leer correctamente. "
+            "Por favor, guarde el archivo en formato UTF-8 o ASCII antes de subirlo. "
+            "Puede hacer esto abriendo el archivo en un editor de texto y guardándolo como 'UTF-8' o 'ASCII'."
+        )
     except Exception as e:
         # Capturar otros errores de parsing (archivo corrupto, formato inválido, etc.)
         error_msg = str(e).lower()
-        if "empty" in error_msg or "no sequences" in error_msg:
+        
+        # Detectar específicamente errores de codificación
+        if "codec" in error_msg or "decode" in error_msg or "ascii" in error_msg or "utf" in error_msg:
+            raise ValueError(
+                "El archivo contiene caracteres especiales (como acentos, ñ, etc.) que no se pueden leer correctamente. "
+                "Por favor, guarde el archivo en formato UTF-8 o ASCII antes de subirlo. "
+                "Puede hacer esto abriendo el archivo en un editor de texto y guardándolo como 'UTF-8' o 'ASCII'."
+            )
+        elif "empty" in error_msg or "no sequences" in error_msg:
             raise ValueError(f"El archivo FASTA está vacío o no contiene secuencias válidas: {ruta_archivo}")
         elif "format" in error_msg or "parse" in error_msg:
-            raise ValueError(f"El archivo FASTA está corrupto o tiene un formato inválido: {ruta_archivo}. Error: {str(e)}")
+            raise ValueError(f"El archivo FASTA está corrupto o tiene un formato inválido: {ruta_archivo}. Verifique que el archivo tenga el formato FASTA correcto.")
         else:
             raise ValueError(f"Error al cargar el archivo FASTA (archivo posiblemente corrupto): {ruta_archivo}. Error: {str(e)}")
     

@@ -150,12 +150,26 @@ class AnalysisClient:
         salmonella_path = Path(self.temp_dir) / "salmonella.fasta"
         gallus_path = Path(self.temp_dir) / "gallus.fasta"
         
-        # Escribir archivos con manejo de errores de memoria
+        # Escribir archivos con manejo de errores de memoria y codificación
         try:
-            salmonella_path.write_bytes(salmonella_fasta)
-            gallus_path.write_bytes(gallus_fasta)
+            # Si los archivos vienen como bytes, escribirlos directamente
+            # Si vienen como string, convertirlos a bytes con UTF-8
+            if isinstance(salmonella_fasta, bytes):
+                salmonella_path.write_bytes(salmonella_fasta)
+            else:
+                salmonella_path.write_text(str(salmonella_fasta), encoding='utf-8')
+            
+            if isinstance(gallus_fasta, bytes):
+                gallus_path.write_bytes(gallus_fasta)
+            else:
+                gallus_path.write_text(str(gallus_fasta), encoding='utf-8')
         except MemoryError:
             raise MemoryError("No hay suficiente memoria para guardar los archivos. Los archivos son demasiado grandes.")
+        except UnicodeEncodeError as e:
+            raise ValueError(
+                "Error de codificación al guardar el archivo. El archivo contiene caracteres que no se pueden procesar. "
+                "Por favor, asegúrese de que el archivo esté guardado en formato UTF-8 o ASCII."
+            )
         
         try:
             # 1. Cargar secuencias usando paths absolutos
