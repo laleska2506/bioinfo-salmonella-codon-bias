@@ -152,24 +152,47 @@ class AnalysisClient:
         
         # Escribir archivos con manejo de errores de memoria y codificación
         try:
-            # Si los archivos vienen como bytes, escribirlos directamente
-            # Si vienen como string, convertirlos a bytes con UTF-8
-            if isinstance(salmonella_fasta, bytes):
-                salmonella_path.write_bytes(salmonella_fasta)
-            else:
-                salmonella_path.write_text(str(salmonella_fasta), encoding='utf-8')
+            # Los archivos vienen como bytes desde Streamlit
+            # Intentar detectar la codificación y guardar correctamente
+            def guardar_archivo_con_codificacion(contenido_bytes, ruta_archivo):
+                """Guarda un archivo detectando automáticamente la codificación."""
+                codificaciones = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1', 'utf-8-sig']
+                
+                for encoding in codificaciones:
+                    try:
+                        # Intentar decodificar con esta codificación
+                        contenido_texto = contenido_bytes.decode(encoding)
+                        # Guardar como texto UTF-8 (normalizado)
+                        ruta_archivo.write_text(contenido_texto, encoding='utf-8')
+                        return True
+                    except (UnicodeDecodeError, UnicodeError):
+                        continue
+                
+                # Si ninguna codificación funciona, guardar como bytes (último recurso)
+                # Esto puede causar problemas después, pero al menos no falla aquí
+                ruta_archivo.write_bytes(contenido_bytes)
+                return False
             
-            if isinstance(gallus_fasta, bytes):
-                gallus_path.write_bytes(gallus_fasta)
-            else:
-                gallus_path.write_text(str(gallus_fasta), encoding='utf-8')
+            # Guardar archivos con detección automática de codificación
+            if not guardar_archivo_con_codificacion(salmonella_fasta, salmonella_path):
+                print("[DEBUG] Advertencia: No se pudo detectar la codificación del archivo Salmonella, guardado como bytes")
+            
+            if not guardar_archivo_con_codificacion(gallus_fasta, gallus_path):
+                print("[DEBUG] Advertencia: No se pudo detectar la codificación del archivo Gallus, guardado como bytes")
+                
         except MemoryError:
             raise MemoryError("No hay suficiente memoria para guardar los archivos. Los archivos son demasiado grandes.")
-        except UnicodeEncodeError as e:
-            raise ValueError(
-                "Error de codificación al guardar el archivo. El archivo contiene caracteres que no se pueden procesar. "
-                "Por favor, asegúrese de que el archivo esté guardado en formato UTF-8 o ASCII."
-            )
+        except Exception as e:
+            # Capturar cualquier otro error y proporcionar mensaje claro
+            error_msg = str(e).lower()
+            if "codec" in error_msg or "decode" in error_msg or "encode" in error_msg:
+                raise ValueError(
+                    "Error de codificación al procesar el archivo. El archivo contiene caracteres especiales que no se pueden leer. "
+                    "Por favor, guarde el archivo en formato UTF-8 o ASCII antes de subirlo. "
+                    "Puede hacer esto abriendo el archivo en un editor de texto y guardándolo como 'UTF-8' o 'ASCII'."
+                )
+            else:
+                raise Exception(f"Error al guardar archivos temporales: {str(e)}")
         
         try:
             # 1. Cargar secuencias usando paths absolutos
