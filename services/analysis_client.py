@@ -152,10 +152,16 @@ class AnalysisClient:
         
         # Escribir archivos con manejo de errores de memoria y codificación
         try:
-            # Los archivos vienen como bytes desde Streamlit
-            # Intentar detectar la codificación y guardar correctamente
+            # Función auxiliar para guardar archivos detectando automáticamente la codificación
             def guardar_archivo_con_codificacion(contenido_bytes, ruta_archivo):
                 """Guarda un archivo detectando automáticamente la codificación."""
+                if not isinstance(contenido_bytes, bytes):
+                    # Si no es bytes, convertir a string y luego a bytes UTF-8
+                    contenido_str = str(contenido_bytes)
+                    ruta_archivo.write_text(contenido_str, encoding='utf-8')
+                    return True
+                
+                # Intentar diferentes codificaciones
                 codificaciones = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1', 'utf-8-sig']
                 
                 for encoding in codificaciones:
@@ -185,7 +191,7 @@ class AnalysisClient:
         except Exception as e:
             # Capturar cualquier otro error y proporcionar mensaje claro
             error_msg = str(e).lower()
-            if "codec" in error_msg or "decode" in error_msg or "encode" in error_msg:
+            if "codec" in error_msg or "decode" in error_msg or "encode" in error_msg or "ascii" in error_msg:
                 raise ValueError(
                     "Error de codificación al procesar el archivo. El archivo contiene caracteres especiales que no se pueden leer. "
                     "Por favor, guarde el archivo en formato UTF-8 o ASCII antes de subirlo. "

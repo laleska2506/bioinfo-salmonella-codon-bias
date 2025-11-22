@@ -2,8 +2,7 @@
 from .procesamiento import (
     cargar_secuencias, 
     calcular_metricas_basicas, 
-    validar_secuencias,
-    limpiar_y_normalizar_secuencias
+    validar_secuencias
 )
 
 # Importaciones desde el módulo de análisis
@@ -37,7 +36,6 @@ __all__ = [
     'cargar_secuencias',
     'calcular_metricas_basicas',
     'validar_secuencias',
-    'limpiar_y_normalizar_secuencias',
     
     # Funciones de análisis
     'calcular_uso_codones',

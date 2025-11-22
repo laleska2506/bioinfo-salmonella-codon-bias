@@ -237,25 +237,16 @@ def validar_archivo_fasta(archivo) -> Tuple[bool, Optional[str]]:
     try:
         # Leer los primeros bytes para validar formato básico
         archivo.seek(0)
-        primeros_bytes = archivo.read(5000)  # Leer más bytes para validar caracteres
+        primeros_bytes = archivo.read(1000)  # Leer más bytes para mejor validación
         archivo.seek(0)
         
         # Verificar que comience con '>'
         if not primeros_bytes.startswith(b'>'):
             return False, "❌ Formato FASTA inválido: el archivo debe comenzar con '>' (cabecera de secuencia)"
         
-        # Intentar decodificar con diferentes codificaciones
-        contenido_str = None
-        codificaciones = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1']
-        for encoding in codificaciones:
-            try:
-                contenido_str = primeros_bytes.decode(encoding)
-                break
-            except (UnicodeDecodeError, UnicodeError):
-                continue
-        
-        if contenido_str is None:
-            return False, "❌ Error: el archivo contiene caracteres que no se pueden leer. Por favor, guarde el archivo en formato UTF-8 o ASCII."
+        # Verificar que tenga al menos una secuencia completa
+        # Buscar patrón: '>' seguido de texto y luego nueva línea con secuencia
+        contenido_str = primeros_bytes.decode('utf-8', errors='ignore')
         
         # Verificar que haya al menos un salto de línea después de la primera cabecera
         if b'\n' not in primeros_bytes and b'\r\n' not in primeros_bytes:
@@ -269,47 +260,16 @@ def validar_archivo_fasta(archivo) -> Tuple[bool, Optional[str]]:
         
         # Verificar que no sea solo texto sin secuencias
         # Un FASTA válido debe tener: '>ID\n' seguido de caracteres de secuencia
-        lineas = contenido_str.split('\n', 10)  # Leer más líneas para validar
+        lineas = contenido_str.split('\n', 3)
         if len(lineas) < 2:
             return False, "❌ El archivo FASTA parece estar incompleto. Debe tener al menos una cabecera y una secuencia."
         
-        # Validar caracteres SOLO en las secuencias (NO en las cabeceras que empiezan con '>')
-        # Las cabeceras pueden contener cualquier carácter, solo validamos las secuencias de ADN
-        nucleotidos_validos = {'A', 'T', 'C', 'G', 'N', ' ', '\n', '\r', '\t'}
-        caracteres_invalidos_encontrados = set()
-        
-        # Buscar líneas de secuencia (las que NO comienzan con '>')
-        # IMPORTANTE: Solo validamos las líneas de secuencia, no las cabeceras
-        for i, linea in enumerate(lineas):
-            linea_limpia = linea.strip()
-            
-            # Saltar cabeceras (líneas que comienzan con '>') - NO validamos estas líneas
-            if linea_limpia.startswith('>') or len(linea_limpia) == 0:
-                continue  # Esta es una cabecera, no una secuencia, así que la saltamos
-            
-            # Esta es una línea de SECUENCIA (no cabecera), validar caracteres SOLO aquí
-            caracteres_linea = set(linea_limpia.upper())
-            caracteres_invalidos = caracteres_linea - nucleotidos_validos
-            
-            if caracteres_invalidos:
-                caracteres_invalidos_encontrados.update(caracteres_invalidos)
-        
-        # Si se encontraron caracteres inválidos, reportar error
-        if caracteres_invalidos_encontrados:
-            caracteres_lista = sorted(caracteres_invalidos_encontrados)
-            caracteres_str = ', '.join([f"'{c}'" for c in caracteres_lista[:5]])  # Mostrar máximo 5
-            if len(caracteres_lista) > 5:
-                caracteres_str += f" y {len(caracteres_lista) - 5} más"
-            return False, f"❌ El archivo está corrupto: se han identificado caracteres inválidos ({caracteres_str}). Las secuencias FASTA solo pueden contener las letras A, T, C, G y N."
-        
         # Verificar que la segunda línea (secuencia) tenga caracteres válidos
-        if len(lineas) >= 2:
-            primera_secuencia = lineas[1].strip()
-            if len(primera_secuencia) == 0:
-                return False, "❌ El archivo FASTA tiene una cabecera pero la secuencia está vacía"
+        if len(lineas) >= 2 and len(lineas[1].strip()) == 0:
+            return False, "❌ El archivo FASTA tiene una cabecera pero la secuencia está vacía"
             
     except UnicodeDecodeError:
-        return False, "❌ Error: el archivo contiene caracteres que no se pueden leer. Por favor, guarde el archivo en formato UTF-8 o ASCII."
+        return False, "❌ Error: el archivo contiene caracteres no válidos. Verifique que sea un archivo de texto FASTA."
     except Exception as e:
         return False, f"❌ Error al leer el archivo: {str(e)}. El archivo puede estar corrupto."
     
@@ -414,10 +374,7 @@ def ejecutar_analisis(salmonella_file, gallus_file, params: Dict):
         error_msg = str(e)
         
         # Mensajes más descriptivos según el tipo de error
-        if "corrupto" in error_msg.lower() and "caracteres inválidos" in error_msg.lower():
-            # Error de caracteres inválidos detectado por limpiar_y_normalizar_secuencias
-            mensaje_usuario = error_msg  # Ya tiene el formato correcto
-        elif "FASTA" in error_msg or "corrupto" in error_msg.lower() or "formato" in error_msg.lower():
+        if "FASTA" in error_msg or "corrupto" in error_msg.lower() or "formato" in error_msg.lower():
             mensaje_usuario = f"❌ Error en el archivo FASTA: {error_msg}"
         elif "caracteres inválidos" in error_msg.lower():
             mensaje_usuario = f"❌ El archivo contiene caracteres inválidos: {error_msg}"
@@ -449,10 +406,7 @@ def ejecutar_analisis(salmonella_file, gallus_file, params: Dict):
         error_msg = str(e)
         
         # Detectar errores comunes y proporcionar mensajes más claros
-        if "corrupto" in error_msg.lower() and "caracteres inválidos" in error_msg.lower():
-            # Error de caracteres inválidos - usar el mensaje tal cual viene
-            mensaje_usuario = error_msg if error_msg.startswith("❌") or error_msg.startswith("El archivo está corrupto") else f"❌ {error_msg}"
-        elif "FASTA" in error_msg or "parse" in error_msg.lower() or "corrupto" in error_msg.lower():
+        if "FASTA" in error_msg or "parse" in error_msg.lower() or "corrupto" in error_msg.lower():
             mensaje_usuario = f"❌ Error al procesar el archivo FASTA (archivo posiblemente corrupto): {error_msg}"
         elif "comunicarse con el backend" in error_msg.lower():
             mensaje_usuario = f"❌ Error de conexión con el servidor: {error_msg}"

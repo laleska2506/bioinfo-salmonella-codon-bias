@@ -76,14 +76,12 @@ def cargar_secuencias(ruta_archivo):
             if not registro.id or len(registro.id.strip()) == 0:
                 raise ValueError(f"El archivo FASTA contiene secuencias sin identificador válido. Verifique el formato del archivo.")
             
-            # Guardar ID y secuencia (SOLO la secuencia, no la cabecera)
-            # registro.seq ya contiene solo la secuencia de ADN (BioPython separa automáticamente las cabeceras)
-            secuencia_solo = str(registro.seq)  # Solo la secuencia, sin la cabecera que empieza con '>'
-            secuencias.append((registro.id, secuencia_solo))
+            # Guardar ID y secuencia (sin normalizar aún)
+            secuencias.append((registro.id, str(registro.seq)))
         
         print(f" Cargadas {len(secuencias)} secuencias desde {ruta_archivo}")
         
-        # Limpiar y normalizar las secuencias (mayúsculas, eliminar espacios, detectar caracteres inválidos)
+        # Limpiar y normalizar las secuencias
         secuencias = limpiar_y_normalizar_secuencias(secuencias)
         
     except ValueError as e:
@@ -115,6 +113,78 @@ def cargar_secuencias(ruta_archivo):
             raise ValueError(f"Error al cargar el archivo FASTA (archivo posiblemente corrupto): {ruta_archivo}. Error: {str(e)}")
     
     return secuencias
+
+def limpiar_y_normalizar_secuencias(secuencias):
+    """
+    Limpia y normaliza las secuencias FASTA.
+    
+    Esta función:
+    - Convierte todas las secuencias a mayúsculas
+    - Elimina espacios, saltos de línea, tabs y otros caracteres de formato
+    - Valida que solo contenga caracteres válidos (A, T, C, G, N)
+    - Si encuentra caracteres inválidos, lanza un error descriptivo
+    
+    Parámetros:
+    -----------
+    secuencias : list
+        Lista de tuplas (id_secuencia, secuencia) donde:
+        - id_secuencia: es el ID de la secuencia
+        - secuencia: es la secuencia de ADN (puede contener espacios, minúsculas, etc.)
+        
+    Retorna:
+    --------
+    list
+        Lista de tuplas (id_secuencia, secuencia_limpia) con secuencias normalizadas
+        
+    Lanza:
+    ------
+    ValueError: Si se encuentran caracteres inválidos en las secuencias (no A, T, C, G, N)
+    """
+    nucleotidos_validos = {'A', 'T', 'C', 'G', 'N'}
+    secuencias_limpias = []
+    caracteres_invalidos_encontrados = set()
+    secuencias_con_error = []
+    
+    for id_sec, sec in secuencias:
+        # Normalizar: convertir a mayúsculas y eliminar espacios, saltos de línea, tabs, etc.
+        sec_limpia = sec.upper().replace(' ', '').replace('\n', '').replace('\r', '').replace('\t', '')
+        
+        # Eliminar cualquier otro carácter que no sea un nucleótido válido
+        # Solo mantener A, T, C, G, N
+        sec_limpia = ''.join(c for c in sec_limpia if c in nucleotidos_validos)
+        
+        # Validar caracteres - solo permitir A, T, C, G, N
+        caracteres_unicos = set(sec_limpia)
+        caracteres_invalidos = caracteres_unicos - nucleotidos_validos
+        
+        if caracteres_invalidos:
+            # Agregar los caracteres inválidos encontrados al conjunto global
+            caracteres_invalidos_encontrados.update(caracteres_invalidos)
+            secuencias_con_error.append(id_sec)
+            print(f" Advertencia: Secuencia {id_sec} contiene caracteres inválidos: {sorted(caracteres_invalidos)}")
+        
+        secuencias_limpias.append((id_sec, sec_limpia))
+    
+    # Si se encontraron caracteres inválidos, lanzar error descriptivo
+    if caracteres_invalidos_encontrados:
+        caracteres_lista = sorted(caracteres_invalidos_encontrados)
+        caracteres_str = ', '.join([f"'{c}'" for c in caracteres_lista])
+        
+        # Mostrar algunas secuencias con error como ejemplo
+        ejemplos = secuencias_con_error[:5]  # Primeras 5 secuencias con error
+        ejemplos_str = ', '.join(ejemplos)
+        if len(secuencias_con_error) > 5:
+            ejemplos_str += f" y {len(secuencias_con_error) - 5} más"
+        
+        raise ValueError(
+            f"El archivo está corrupto porque se han identificado caracteres inválidos en las secuencias: {caracteres_str}. "
+            f"Las secuencias FASTA solo pueden contener las letras A, T, C, G y N (para bases ambiguas). "
+            f"Se encontraron caracteres inválidos en {len(secuencias_con_error)} secuencia(s), por ejemplo: {ejemplos_str}. "
+            f"Por favor, verifique que el archivo contenga solo secuencias de ADN válidas."
+        )
+    
+    print(f" Secuencias normalizadas: {len(secuencias_limpias)} secuencias procesadas correctamente")
+    return secuencias_limpias
 
 def calcular_metricas_basicas(secuencias):
     """
@@ -160,69 +230,6 @@ def calcular_metricas_basicas(secuencias):
     print(f" Calculadas métricas para {len(datos)} secuencias")
     
     return df
-
-def limpiar_y_normalizar_secuencias(secuencias):
-    """
-    Limpia y normaliza las secuencias FASTA.
-    
-    IMPORTANTE: Esta función valida SOLO las secuencias de ADN, NO las cabeceras.
-    Las secuencias ya vienen separadas de las cabeceras por BioPython.
-    
-    Esta función:
-    - Convierte todas las secuencias a mayúsculas
-    - Elimina espacios, saltos de línea y otros caracteres de formato
-    - Detecta caracteres inválidos SOLO en las secuencias y reporta cuáles son
-    
-    Parámetros:
-    -----------
-    secuencias : list
-        Lista de tuplas (id_secuencia, secuencia) donde:
-        - id_secuencia: es el ID de la secuencia (de la cabecera, pero no se valida aquí)
-        - secuencia: es SOLO la secuencia de ADN (sin la cabecera que empieza con '>')
-        
-    Retorna:
-    --------
-    list
-        Lista de tuplas (id_secuencia, secuencia_limpia) con secuencias normalizadas
-        
-    Lanza:
-    ------
-    ValueError: Si se encuentran caracteres inválidos en las SECUENCIAS (no A, T, C, G, N)
-    """
-    nucleotidos_validos = {'A', 'T', 'C', 'G', 'N'}
-    secuencias_limpias = []
-    caracteres_invalidos_encontrados = set()
-    
-    for id_sec, sec in secuencias:
-        # IMPORTANTE: 'sec' contiene SOLO la secuencia de ADN, NO la cabecera
-        # La cabecera ya fue separada por BioPython y está en 'id_sec'
-        
-        # Normalizar: convertir a mayúsculas y eliminar espacios, saltos de línea, tabs, etc.
-        sec_limpia = sec.upper().replace(' ', '').replace('\n', '').replace('\r', '').replace('\t', '')
-        
-        # Validar caracteres SOLO en la secuencia (no en la cabecera)
-        caracteres_unicos = set(sec_limpia)
-        caracteres_invalidos = caracteres_unicos - nucleotidos_validos
-        
-        if caracteres_invalidos:
-            # Agregar los caracteres inválidos encontrados al conjunto global
-            caracteres_invalidos_encontrados.update(caracteres_invalidos)
-            print(f" Advertencia: Secuencia {id_sec} contiene caracteres inválidos en la secuencia de ADN: {sorted(caracteres_invalidos)}")
-        
-        secuencias_limpias.append((id_sec, sec_limpia))
-    
-    # Si se encontraron caracteres inválidos, lanzar error descriptivo
-    if caracteres_invalidos_encontrados:
-        caracteres_lista = sorted(caracteres_invalidos_encontrados)
-        caracteres_str = ', '.join([f"'{c}'" for c in caracteres_lista])
-        raise ValueError(
-            f"El archivo está corrupto porque se han identificado caracteres inválidos: {caracteres_str}. "
-            f"Las secuencias FASTA solo pueden contener las letras A, T, C, G y N (para bases ambiguas). "
-            f"Por favor, verifique que el archivo contenga solo secuencias de ADN válidas."
-        )
-    
-    print(f" Secuencias normalizadas: {len(secuencias_limpias)} secuencias procesadas correctamente")
-    return secuencias_limpias
 
 def validar_secuencias(secuencias):
     """
