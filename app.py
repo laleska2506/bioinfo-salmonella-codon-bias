@@ -273,18 +273,21 @@ def validar_archivo_fasta(archivo) -> Tuple[bool, Optional[str]]:
         if len(lineas) < 2:
             return False, "❌ El archivo FASTA parece estar incompleto. Debe tener al menos una cabecera y una secuencia."
         
-        # Validar caracteres en las secuencias (no en las cabeceras)
+        # Validar caracteres SOLO en las secuencias (NO en las cabeceras que empiezan con '>')
+        # Las cabeceras pueden contener cualquier carácter, solo validamos las secuencias de ADN
         nucleotidos_validos = {'A', 'T', 'C', 'G', 'N', ' ', '\n', '\r', '\t'}
         caracteres_invalidos_encontrados = set()
         
-        # Buscar líneas de secuencia (las que no comienzan con '>')
+        # Buscar líneas de secuencia (las que NO comienzan con '>')
+        # IMPORTANTE: Solo validamos las líneas de secuencia, no las cabeceras
         for i, linea in enumerate(lineas):
             linea_limpia = linea.strip()
-            # Saltar cabeceras (líneas que comienzan con '>')
-            if linea_limpia.startswith('>') or len(linea_limpia) == 0:
-                continue
             
-            # Esta es una línea de secuencia, validar caracteres
+            # Saltar cabeceras (líneas que comienzan con '>') - NO validamos estas líneas
+            if linea_limpia.startswith('>') or len(linea_limpia) == 0:
+                continue  # Esta es una cabecera, no una secuencia, así que la saltamos
+            
+            # Esta es una línea de SECUENCIA (no cabecera), validar caracteres SOLO aquí
             caracteres_linea = set(linea_limpia.upper())
             caracteres_invalidos = caracteres_linea - nucleotidos_validos
             
