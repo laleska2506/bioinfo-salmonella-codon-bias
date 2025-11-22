@@ -214,30 +214,64 @@ def init_session_state():
 
 @st.cache_data(ttl=300, show_spinner=False)
 def validar_archivo_fasta(archivo) -> Tuple[bool, Optional[str]]:
-    """Validación rápida de archivos FASTA"""
+    """
+    Validación mejorada de archivos FASTA.
+    
+    Verifica:
+    - Que el archivo no sea None
+    - Que tenga extensión .fa o .fasta
+    - Que no esté vacío
+    - Que tenga el formato FASTA básico (comience con '>')
+    - Que tenga al menos una secuencia válida
+    """
     if archivo is None:
-        return False, "Archivo requerido"
+        return False, "❌ Archivo requerido"
     
     nombre = archivo.name.lower()
     if not (nombre.endswith('.fa') or nombre.endswith('.fasta')):
-        return False, "Extensión .fa o .fasta requerida"
+        return False, "❌ El archivo debe tener extensión .fa o .fasta"
     
     if archivo.size == 0:
-        return False, "Archivo vacío"
+        return False, "❌ El archivo está vacío"
     
     try:
-        primeros_bytes = archivo.read(100)
+        # Leer los primeros bytes para validar formato básico
         archivo.seek(0)
-        if not primeros_bytes.startswith(b'>'):
-            return False, "Formato FASTA inválido - debe comenzar con '>'"
+        primeros_bytes = archivo.read(1000)  # Leer más bytes para mejor validación
+        archivo.seek(0)
         
-        if b'\n>' in primeros_bytes or b'\r>' in primeros_bytes:
-            return True, None
-        elif b'\n' in primeros_bytes and len(primeros_bytes) > 50:
-            return True, None
+        # Verificar que comience con '>'
+        if not primeros_bytes.startswith(b'>'):
+            return False, "❌ Formato FASTA inválido: el archivo debe comenzar con '>' (cabecera de secuencia)"
+        
+        # Verificar que tenga al menos una secuencia completa
+        # Buscar patrón: '>' seguido de texto y luego nueva línea con secuencia
+        contenido_str = primeros_bytes.decode('utf-8', errors='ignore')
+        
+        # Verificar que haya al menos un salto de línea después de la primera cabecera
+        if b'\n' not in primeros_bytes and b'\r\n' not in primeros_bytes:
+            if len(primeros_bytes) < 50:
+                return False, "❌ El archivo parece estar incompleto o corrupto. Verifique que tenga el formato FASTA correcto."
+        
+        # Verificar que haya al menos una secuencia (buscar múltiples '>')
+        num_cabeceras = primeros_bytes.count(b'>')
+        if num_cabeceras == 0:
+            return False, "❌ No se encontraron secuencias FASTA válidas en el archivo"
+        
+        # Verificar que no sea solo texto sin secuencias
+        # Un FASTA válido debe tener: '>ID\n' seguido de caracteres de secuencia
+        lineas = contenido_str.split('\n', 3)
+        if len(lineas) < 2:
+            return False, "❌ El archivo FASTA parece estar incompleto. Debe tener al menos una cabecera y una secuencia."
+        
+        # Verificar que la segunda línea (secuencia) tenga caracteres válidos
+        if len(lineas) >= 2 and len(lineas[1].strip()) == 0:
+            return False, "❌ El archivo FASTA tiene una cabecera pero la secuencia está vacía"
             
+    except UnicodeDecodeError:
+        return False, "❌ Error: el archivo contiene caracteres no válidos. Verifique que sea un archivo de texto FASTA."
     except Exception as e:
-        return False, f"Error de lectura: {str(e)}"
+        return False, f"❌ Error al leer el archivo: {str(e)}. El archivo puede estar corrupto."
     
     return True, None
 
@@ -334,11 +368,54 @@ def ejecutar_analisis(salmonella_file, gallus_file, params: Dict):
         st.success(f"Análisis ejecutado exitosamente en {processing_time:.1f} segundos")
         return True
         
+    except ValueError as e:
+        # Errores de validación de archivos (formato, corrupto, etc.)
+        processing_time = time.time() - st.session_state.processing_start_time if st.session_state.processing_start_time else 0
+        error_msg = str(e)
+        
+        # Mensajes más descriptivos según el tipo de error
+        if "FASTA" in error_msg or "corrupto" in error_msg.lower() or "formato" in error_msg.lower():
+            mensaje_usuario = f"❌ Error en el archivo FASTA: {error_msg}"
+        elif "caracteres inválidos" in error_msg.lower():
+            mensaje_usuario = f"❌ El archivo contiene caracteres inválidos: {error_msg}"
+        elif "vacío" in error_msg.lower() or "empty" in error_msg.lower():
+            mensaje_usuario = f"❌ El archivo está vacío o no contiene secuencias: {error_msg}"
+        else:
+            mensaje_usuario = f"❌ Error de validación: {error_msg}"
+        
+        st.session_state.error_message = f"Error en {processing_time:.1f}s: {mensaje_usuario}"
+        st.session_state.analysis_status = 'FAILED'
+        st.error(mensaje_usuario)
+        return False
+    except FileNotFoundError as e:
+        processing_time = time.time() - st.session_state.processing_start_time if st.session_state.processing_start_time else 0
+        mensaje_usuario = f"❌ Archivo no encontrado: {str(e)}"
+        st.session_state.error_message = f"Error en {processing_time:.1f}s: {mensaje_usuario}"
+        st.session_state.analysis_status = 'FAILED'
+        st.error(mensaje_usuario)
+        return False
+    except MemoryError as e:
+        processing_time = time.time() - st.session_state.processing_start_time if st.session_state.processing_start_time else 0
+        mensaje_usuario = f"❌ Error de memoria: Los archivos son demasiado grandes para procesar. {str(e)}"
+        st.session_state.error_message = f"Error en {processing_time:.1f}s: {mensaje_usuario}"
+        st.session_state.analysis_status = 'FAILED'
+        st.error(mensaje_usuario)
+        return False
     except Exception as e:
         processing_time = time.time() - st.session_state.processing_start_time if st.session_state.processing_start_time else 0
-        st.session_state.error_message = f"Error en {processing_time:.1f}s: {str(e)}"
+        error_msg = str(e)
+        
+        # Detectar errores comunes y proporcionar mensajes más claros
+        if "FASTA" in error_msg or "parse" in error_msg.lower() or "corrupto" in error_msg.lower():
+            mensaje_usuario = f"❌ Error al procesar el archivo FASTA (archivo posiblemente corrupto): {error_msg}"
+        elif "comunicarse con el backend" in error_msg.lower():
+            mensaje_usuario = f"❌ Error de conexión con el servidor: {error_msg}"
+        else:
+            mensaje_usuario = f"❌ Error durante el análisis: {error_msg}"
+        
+        st.session_state.error_message = f"Error en {processing_time:.1f}s: {mensaje_usuario}"
         st.session_state.analysis_status = 'FAILED'
-        st.error(f"Error: {str(e)}")
+        st.error(mensaje_usuario)
         return False
 
 def mostrar_graficos_correspondientes(resultados: Dict):

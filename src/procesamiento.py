@@ -20,20 +20,51 @@ def cargar_secuencias(ruta_archivo):
     --------------
     - data/salmonella_genes.fasta
     - data/gallus_genes.fasta
+    
+    Lanza:
+    ------
+    FileNotFoundError: Si el archivo no existe
+    ValueError: Si el archivo está corrupto o no es un FASTA válido
     """
     # Verificar que el archivo existe
     if not os.path.exists(ruta_archivo):
         raise FileNotFoundError(f"No se encontró el archivo: {ruta_archivo}")
     
+    # Verificar que el archivo no esté vacío
+    if os.path.getsize(ruta_archivo) == 0:
+        raise ValueError(f"El archivo FASTA está vacío: {ruta_archivo}")
+    
     secuencias = []
     try:
-        for registro in SeqIO.parse(ruta_archivo, "fasta"):
+        # Intentar parsear el archivo FASTA
+        registros = list(SeqIO.parse(ruta_archivo, "fasta"))
+        
+        # Verificar que se encontraron secuencias
+        if len(registros) == 0:
+            raise ValueError(f"El archivo FASTA no contiene secuencias válidas: {ruta_archivo}. Verifique que el archivo tenga el formato correcto.")
+        
+        for registro in registros:
+            # Verificar que el registro tenga un ID válido
+            if not registro.id or len(registro.id.strip()) == 0:
+                raise ValueError(f"El archivo FASTA contiene secuencias sin identificador válido. Verifique el formato del archivo.")
+            
             # Guardar ID y secuencia en mayúsculas
             secuencias.append((registro.id, str(registro.seq).upper()))
+        
         print(f" Cargadas {len(secuencias)} secuencias desde {ruta_archivo}")
+        
+    except ValueError as e:
+        # Re-lanzar ValueError con mensaje descriptivo
+        raise ValueError(f"Error al procesar el archivo FASTA: {str(e)}")
     except Exception as e:
-        print(f" Error al cargar el archivo {ruta_archivo}: {e}")
-        raise
+        # Capturar otros errores de parsing (archivo corrupto, formato inválido, etc.)
+        error_msg = str(e).lower()
+        if "empty" in error_msg or "no sequences" in error_msg:
+            raise ValueError(f"El archivo FASTA está vacío o no contiene secuencias válidas: {ruta_archivo}")
+        elif "format" in error_msg or "parse" in error_msg:
+            raise ValueError(f"El archivo FASTA está corrupto o tiene un formato inválido: {ruta_archivo}. Error: {str(e)}")
+        else:
+            raise ValueError(f"Error al cargar el archivo FASTA (archivo posiblemente corrupto): {ruta_archivo}. Error: {str(e)}")
     
     return secuencias
 
@@ -96,7 +127,7 @@ def validar_secuencias(secuencias):
     bool
         True si todas las secuencias son válidas, False en caso contrario
     """
-    nucleotidos_validos = {'A', 'T', 'C', 'G'}
+    nucleotidos_validos = {'A', 'T', 'C', 'G', 'N'}
     
     for id_sec, sec in secuencias:
         sec_set = set(sec.upper())

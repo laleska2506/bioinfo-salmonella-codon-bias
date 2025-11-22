@@ -111,8 +111,18 @@ class AnalysisClient:
             response = requests.post(url, files=files, data=data, timeout=30)
             response.raise_for_status()
             return response.json()
+        except requests.exceptions.Timeout:
+            raise Exception("❌ Tiempo de espera agotado al comunicarse con el servidor. El archivo puede ser demasiado grande o el servidor está ocupado.")
+        except requests.exceptions.HTTPError as e:
+            # Intentar obtener mensaje de error del servidor si está disponible
+            try:
+                error_data = response.json()
+                error_msg = error_data.get('error', error_data.get('message', str(e)))
+                raise Exception(f"❌ Error del servidor: {error_msg}")
+            except:
+                raise Exception(f"❌ Error al comunicarse con el backend (HTTP {response.status_code}): {str(e)}")
         except requests.exceptions.RequestException as e:
-            raise Exception(f"Error al comunicarse con el backend: {e}")
+            raise Exception(f"❌ Error de conexión con el backend: {str(e)}. Verifique que el servidor esté disponible.")
     
     def _start_analysis_local(
         self,
@@ -153,21 +163,27 @@ class AnalysisClient:
             import sys
             sys.stdout.write("[DEBUG] Cargando secuencias de Salmonella...\n")
             sys.stdout.flush()
-            salmonella = cargar_secuencias(str(salmonella_path.absolute()))
-            sys.stdout.write(f"[DEBUG] Cargadas {len(salmonella)} secuencias de Salmonella\n")
-            sys.stdout.flush()
+            try:
+                salmonella = cargar_secuencias(str(salmonella_path.absolute()))
+                sys.stdout.write(f"[DEBUG] Cargadas {len(salmonella)} secuencias de Salmonella\n")
+                sys.stdout.flush()
+            except (ValueError, FileNotFoundError) as e:
+                raise ValueError(f"Error al cargar el archivo FASTA de Salmonella: {str(e)}")
             
             sys.stdout.write("[DEBUG] Cargando secuencias de Gallus...\n")
             sys.stdout.flush()
-            gallus = cargar_secuencias(str(gallus_path.absolute()))
-            sys.stdout.write(f"[DEBUG] Cargadas {len(gallus)} secuencias de Gallus\n")
-            sys.stdout.flush()
+            try:
+                gallus = cargar_secuencias(str(gallus_path.absolute()))
+                sys.stdout.write(f"[DEBUG] Cargadas {len(gallus)} secuencias de Gallus\n")
+                sys.stdout.flush()
+            except (ValueError, FileNotFoundError) as e:
+                raise ValueError(f"Error al cargar el archivo FASTA de Gallus: {str(e)}")
             
             # 2. Validar secuencias
             if not validar_secuencias(salmonella):
-                raise ValueError("Las secuencias de Salmonella contienen caracteres inválidos")
+                raise ValueError("Las secuencias de Salmonella contienen caracteres inválidos. Solo se permiten A, T, C, G y N.")
             if not validar_secuencias(gallus):
-                raise ValueError("Las secuencias de Gallus contienen caracteres inválidos")
+                raise ValueError("Las secuencias de Gallus contienen caracteres inválidos. Solo se permiten A, T, C, G y N.")
             
             # 3. Filtrar por longitud mínima
             min_len = params.get('min_len', 0)
@@ -240,8 +256,19 @@ class AnalysisClient:
                 }
             }
             
+        except ValueError as e:
+            # Re-lanzar ValueError con el mensaje original (ya es descriptivo)
+            raise
+        except MemoryError as e:
+            # Re-lanzar MemoryError con el mensaje original
+            raise
         except Exception as e:
-            raise Exception(f"Error durante el análisis local: {e}")
+            # Para otros errores, proporcionar contexto adicional
+            error_msg = str(e)
+            if "FASTA" in error_msg or "corrupto" in error_msg.lower():
+                raise ValueError(f"Error al procesar archivos FASTA: {error_msg}")
+            else:
+                raise Exception(f"Error durante el análisis local: {error_msg}")
     
     def _limpiar_ns(self, secuencias: List[Tuple[str, str]]) -> List[Tuple[str, str]]:
         """Elimina o reemplaza caracteres N en secuencias."""
