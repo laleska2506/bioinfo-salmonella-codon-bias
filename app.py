@@ -689,7 +689,7 @@ def main():
                 mostrar_resultados(st.session_state.analysis_results)
         
         elif status == 'FAILED':
-            st.error(" Error en el análisis")
+            st.error(" Error en el análisis del archivo, se han encontrado caracteres inválidos en las secuencias.")
             if st.session_state.error_message:
                 st.error(st.session_state.error_message)
 
